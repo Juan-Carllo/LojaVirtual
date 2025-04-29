@@ -8,15 +8,18 @@ $erro_nome = isset($_GET['erro_nome']) ? $_GET['erro_nome'] : '';
 $erro_senha = isset($_GET['erro_senha']) ? $_GET['erro_senha'] : '';
 ?>
 
-<html>
-<head>
-    <title>Cadastro de Usuário</title>
-</head>
-<body>
+<?php 
+  $pageTitle = "Registro"; 
+  include_once 'components/header.php'; 
+?>
 
-    <h1>Cadastro de Usuários</h1>
+<?php
+include 'components/card.php';
 
-    <form action="salvaUsuario.php" method="post">
+// começa a capturar o html
+ob_start();
+?>
+    <form action="salvaUsuario.php" method="post" class="space-y-4">
 
         <label for="login">Login:</label>
         <input type="text" value="<?= isset($usuario) ? htmlspecialchars($usuario->getLogin()) : '' ?>" name="login" required />
@@ -47,6 +50,10 @@ $erro_senha = isset($_GET['erro_senha']) ? $_GET['erro_senha'] : '';
 
     <br>
     <a href="index.php">Voltar</a>
+<?php
+$content = ob_get_clean(); // 
 
-</body>
-</html>
+renderCard('Registro', $content);
+?>
+
+<?php include_once 'components/footer.php'; ?>
