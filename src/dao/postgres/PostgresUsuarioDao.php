@@ -1,5 +1,6 @@
 <?php
 
+include_once('/var/www/html/dao/DAO.php');
 include_once('C:\wamp64\www\projeto_loja\dao\UsuarioDao.php.php');
 include_once('dao\DAO.php');
 

@@ -1,4 +1,3 @@
-
 <?php
 abstract class DAO {
 
@@ -7,7 +6,6 @@ abstract class DAO {
     public function __construct($conn){
         $this->conn = $conn;
     }
-
 
     public function getDriver() {
         return $this->conn->getAttribute(PDO::ATTR_DRIVER_NAME);

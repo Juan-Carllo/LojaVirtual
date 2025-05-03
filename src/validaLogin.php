@@ -3,6 +3,10 @@ include_once "fachada.php";
 
 session_start();
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $login = $_POST['login'];
 $senha = $_POST['senha'];  // Senha real oficial
 
@@ -14,7 +18,6 @@ if ($usuario) {
         
         $_SESSION['usuario_nome'] = $usuario->getNome();
         $_SESSION['usuario_id'] = $usuario->getId();
-
         header("Location: home.php");
         exit;
     } else {
@@ -28,4 +31,6 @@ if ($usuario) {
     header("Location: index.php");  
     exit;
 }
+
+
 ?>

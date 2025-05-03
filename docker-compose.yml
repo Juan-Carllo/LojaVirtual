@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  app:
+    build: .
+    container_name: php-app
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    restart: always
+    environment:
+      POSTGRES_DB: lojavirtual
+      POSTGRES_USER: amigosdocasa
+      POSTGRES_PASSWORD: senhasuperdificil
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Importante: este script roda apenas se o volume ainda não existir!
+      - ./script_postgresql.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres_data:
