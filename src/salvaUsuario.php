@@ -1,25 +1,30 @@
 <?php
 // pages/salvaUsuario.php
-// Verifica permissão de admin
-if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/fachada.php';
+
+// Detecta se é edição
+$isEdicao = !empty($_POST['id']);
+
+// Verifica permissão de admin apenas para edição
+if ($isEdicao && ($_SESSION['usuario_tipo'] ?? '') !== 'admin') {
     header("Location: /index.php/home");
     exit;
 }
-
-include_once __DIR__ . '/fachada.php';
 
 // Inicializa erros
 $erro_login = $erro_nome = $erro_senha = "";
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST') {
-    // 1) Dados de usuário
+    // 1) Dados do usuário
     $id     = $_POST["id"]     ?? null;
     $login  = trim($_POST["login"]  ?? '');
     $nome   = trim($_POST["nome"]   ?? '');
-    $senha  = $_POST["senha"]  ?? '';
-    $tipo   = $_POST["tipo"]   ?? 'cliente';
+    $senha  = $_POST["senha"]       ?? '';
+    $tipo   = $_POST["tipo"]        ?? 'cliente';  // padrão
 
-    // 2) Dados de endereço
+    // 2) Endereço
     $rua         = trim($_POST["rua"]         ?? '');
     $numero      = trim($_POST["numero"]      ?? '');
     $complemento = trim($_POST["complemento"] ?? '');
@@ -30,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
 
     $valido = true;
 
-    // Validações básicas
+    // Validações
     if (empty($login)) {
         $erro_login = "Login é obrigatório!";
         $valido = false;
@@ -39,49 +44,43 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
         $erro_nome = "Nome é obrigatório!";
         $valido = false;
     }
-    // senha opcional: só erro se criando novo
     if (!$id && empty($senha)) {
         $erro_senha = "Senha é obrigatória!";
         $valido = false;
     }
 
+    $dao = $factory->getUsuarioDao();
+
     if ($valido) {
-        $dao = $factory->getUsuarioDao();
         $usuarioExistente = $dao->buscaPorLogin($login);
         if ($usuarioExistente && $usuarioExistente->getId() != $id) {
-            $erro_login = "Erro: O login '$login' já está em uso.";
+            $erro_login = "O login '$login' já está em uso.";
             $valido = false;
         }
     }
 
     if ($valido) {
-        // Hash da senha se informada
         $senha_hash = $senha !== '' ? password_hash($senha, PASSWORD_DEFAULT) : null;
 
-        // Edição ou criação
         if ($id) {
-            // Busca usuário existente
-            $usuario  = $dao->buscaPorId((int)$id);
+            // Editar usuário
+            $usuario = $dao->buscaPorId((int)$id);
             if (!$usuario) {
                 header("Location: /index.php/usuario");
                 exit;
             }
 
-            // Atualiza dados do usuário
             $usuario->setLogin($login);
             $usuario->setNome($nome);
-            $usuario->setTipo($tipo);            // seta o tipo
+            $usuario->setTipo($tipo);
             if ($senha_hash) {
                 $usuario->setSenha($senha_hash);
             }
 
-            // Endereço existente ou novo
             $endereco = $usuario->getEndereco();
             if (!$endereco) {
                 $endereco = new Endereco(
-                    null,
-                    $rua, $numero, $complemento,
-                    $bairro, $cep, $cidade, $estado
+                    null, $rua, $numero, $complemento, $bairro, $cep, $cidade, $estado
                 );
             } else {
                 $endereco->setRua($rua);
@@ -92,18 +91,16 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
                 $endereco->setCidade($cidade);
                 $endereco->setEstado($estado);
             }
-            $usuario->setEndereco($endereco);
 
-            // Persiste alteração
+            $usuario->setEndereco($endereco);
             $dao->altera($usuario, $endereco);
+
         } else {
-            // Cria novo endereço
+            // Novo cadastro
             $endereco = new Endereco(
-                null,
-                $rua, $numero, $complemento,
-                $bairro, $cep, $cidade, $estado
+                null, $rua, $numero, $complemento, $bairro, $cep, $cidade, $estado
             );
-            // Cria novo usuário
+
             $usuario = new Usuario(
                 null,
                 $login,
@@ -112,15 +109,20 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
                 $tipo,
                 $endereco
             );
-            // Persiste novo
+
             $dao->insere($usuario, $endereco);
         }
 
-        header("Location: /index.php/usuario");
+        // Redirecionamento pós-sucesso
+        if (isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin') {
+            header("Location: /index.php/usuario");
+        } else {
+            header("Location: /index.php/login");
+        }
         exit;
     }
 
-    // Em caso de erro, redireciona reabrindo modal
+    // Em caso de erro, redireciona com os dados para reabrir modal
     $qs = http_build_query([
         'error_login'   => $erro_login,
         'error_nome'    => $erro_nome,
@@ -137,10 +139,15 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
         'cidade'        => $cidade,
         'estado'        => $estado,
     ]);
-    header("Location: /index.php/usuario?$qs");
+
+    $destino = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin'
+        ? "usuario"
+        : "registrar";
+
+    header("Location: /index.php/$destino?$qs");
     exit;
 }
 
-// Se não for POST, retorna ao usuário
-header("Location: /index.php/usuario");
+// Se não for POST, redireciona
+header("Location: /index.php/home");
 exit;

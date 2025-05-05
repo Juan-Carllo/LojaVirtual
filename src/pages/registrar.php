@@ -158,16 +158,20 @@ $erro_senha = $_GET['erro_senha'] ?? '';
   <!-- ID oculto para edição -->
   <input type="hidden" name="id" value="<?= htmlspecialchars($usuario->getId() ?? '') ?>" />
 
-  <!-- Botões -->
-  <div class="flex justify-between items-center pt-4">
-    <a href="../index.php" class="text-blue-600 hover:text-blue-800 hover:underline">Voltar</a>
-    <button
-      type="submit"
-      class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-md transition"
-    >
-      Registrar
-    </button>
-  </div>
+ <!-- Tipo oculto -->
+<input type="hidden" name="tipo" value="cliente" />
+
+<!-- Botões -->
+<div class="flex justify-between items-center pt-4">
+  <a href="../index.php" class="text-blue-600 hover:text-blue-800 hover:underline">Voltar</a>
+  <button
+    type="submit"
+    class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-6 rounded-md transition"
+  >
+    Registrar
+  </button>
+</div>
+
 
 </form>
 

@@ -11,14 +11,35 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao {
         try {
             $this->conn->beginTransaction();
 
-            $query = "INSERT INTO {$this->table_name} (login, senha, nome, tipo) 
-                      VALUES (:login, :senha, :nome, :tipo)";
-            $stmt = $this->conn->prepare($query);
+            // 1. Insere endereço
+            $queryEndereco = "INSERT INTO endereco (rua, numero, complemento, bairro, cep, cidade, estado)
+                              VALUES (:rua, :numero, :complemento, :bairro, :cep, :cidade, :estado)
+                              RETURNING id";
+            $stmtEndereco = $this->conn->prepare($queryEndereco);
+            $stmtEndereco->bindParam(":rua",         $endereco->getRua());
+            $stmtEndereco->bindParam(":numero",      $endereco->getNumero());
+            $stmtEndereco->bindParam(":complemento", $endereco->getComplemento());
+            $stmtEndereco->bindParam(":bairro",      $endereco->getBairro());
+            $stmtEndereco->bindParam(":cep",         $endereco->getCep());
+            $stmtEndereco->bindParam(":cidade",      $endereco->getCidade());
+            $stmtEndereco->bindParam(":estado",      $endereco->getEstado());
 
-            $stmt->bindParam(":login", $usuario->getLogin());
-            $stmt->bindParam(":senha", $usuario->getSenha());
-            $stmt->bindParam(":nome",  $usuario->getNome());
-            $stmt->bindParam(":tipo",  $usuario->getTipo());
+            if (!$stmtEndereco->execute()) {
+                $this->conn->rollBack();
+                return -1;
+            }
+
+            $enderecoId = $stmtEndereco->fetchColumn();
+
+            // 2. Insere usuário com o endereco_id
+            $query = "INSERT INTO {$this->table_name} (login, senha, nome, tipo, endereco_id) 
+                      VALUES (:login, :senha, :nome, :tipo, :endereco_id)";
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(":login",       $usuario->getLogin());
+            $stmt->bindParam(":senha",       $usuario->getSenha());
+            $stmt->bindParam(":nome",        $usuario->getNome());
+            $stmt->bindParam(":tipo",        $usuario->getTipo());
+            $stmt->bindParam(":endereco_id", $enderecoId);
 
             if (!$stmt->execute()) {
                 $this->conn->rollBack();
@@ -26,21 +47,6 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao {
             }
 
             $usuarioId = $this->conn->lastInsertId();
-
-            $queryEndereco = "INSERT INTO endereco (usuario_id, rua, numero, cidade, estado, cep)
-                              VALUES (:usuario_id, :rua, :numero, :cidade, :estado, :cep)";
-            $stmtEndereco = $this->conn->prepare($queryEndereco);
-            $stmtEndereco->bindParam(":usuario_id", $usuarioId);
-            $stmtEndereco->bindParam(":rua",        $endereco->getRua());
-            $stmtEndereco->bindParam(":numero",     $endereco->getNumero());
-            $stmtEndereco->bindParam(":cidade",     $endereco->getCidade());
-            $stmtEndereco->bindParam(":estado",     $endereco->getEstado());
-            $stmtEndereco->bindParam(":cep",        $endereco->getCep());
-
-            if (!$stmtEndereco->execute()) {
-                $this->conn->rollBack();
-                return -1;
-            }
 
             $this->conn->commit();
             return $usuarioId;
@@ -51,46 +57,47 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao {
         }
     }
 
-    public function remove($usuario) {
-        $query = "DELETE FROM {$this->table_name} WHERE id = :id";
-
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $usuario->getId());
-
-        return $stmt->execute();
-    }
-
     public function altera($usuario, $endereco) {
         try {
             $this->conn->beginTransaction();
 
-            $query = "UPDATE {$this->table_name} 
-                      SET login = :login, senha = :senha, nome = :nome, tipo = :tipo 
+            // Atualiza usuário
+            $query = "UPDATE {$this->table_name}
+                      SET login = :login, senha = :senha, nome = :nome, tipo = :tipo
                       WHERE id = :id";
-
             $stmt = $this->conn->prepare($query);
             $stmt->bindParam(":login", $usuario->getLogin());
             $stmt->bindParam(":senha", $usuario->getSenha());
             $stmt->bindParam(":nome",  $usuario->getNome());
             $stmt->bindParam(":tipo",  $usuario->getTipo());
-            $stmt->bindParam(':id',    $usuario->getId());
+            $stmt->bindParam(":id",    $usuario->getId());
 
             if (!$stmt->execute()) {
                 $this->conn->rollBack();
                 return false;
             }
 
-            $queryEndereco = "UPDATE endereco 
-                              SET rua = :rua, numero = :numero, cidade = :cidade, estado = :estado, cep = :cep 
-                              WHERE usuario_id = :usuario_id";
+            // Pega endereço_id do usuário
+            $queryEnderecoId = "SELECT endereco_id FROM {$this->table_name} WHERE id = :id";
+            $stmtEnderecoId = $this->conn->prepare($queryEnderecoId);
+            $stmtEnderecoId->bindParam(":id", $usuario->getId());
+            $stmtEnderecoId->execute();
+            $enderecoId = $stmtEnderecoId->fetchColumn();
 
+            // Atualiza endereço
+            $queryEndereco = "UPDATE endereco 
+                              SET rua = :rua, numero = :numero, complemento = :complemento,
+                                  bairro = :bairro, cep = :cep, cidade = :cidade, estado = :estado
+                              WHERE id = :id";
             $stmtEndereco = $this->conn->prepare($queryEndereco);
-            $stmtEndereco->bindParam(":usuario_id", $usuario->getId());
-            $stmtEndereco->bindParam(":rua",        $endereco->getRua());
-            $stmtEndereco->bindParam(":numero",     $endereco->getNumero());
-            $stmtEndereco->bindParam(":cidade",     $endereco->getCidade());
-            $stmtEndereco->bindParam(":estado",     $endereco->getEstado());
-            $stmtEndereco->bindParam(":cep",        $endereco->getCep());
+            $stmtEndereco->bindParam(":rua",         $endereco->getRua());
+            $stmtEndereco->bindParam(":numero",      $endereco->getNumero());
+            $stmtEndereco->bindParam(":complemento", $endereco->getComplemento());
+            $stmtEndereco->bindParam(":bairro",      $endereco->getBairro());
+            $stmtEndereco->bindParam(":cep",         $endereco->getCep());
+            $stmtEndereco->bindParam(":cidade",      $endereco->getCidade());
+            $stmtEndereco->bindParam(":estado",      $endereco->getEstado());
+            $stmtEndereco->bindParam(":id",          $enderecoId);
 
             if (!$stmtEndereco->execute()) {
                 $this->conn->rollBack();
@@ -106,36 +113,37 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao {
         }
     }
 
-    public function buscaPorId($id) {
-        $usuario = null;
+    public function remove($usuario) {
+        $query = "DELETE FROM {$this->table_name} WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $usuario->getId());
+        return $stmt->execute();
+    }
 
-        $query = "SELECT id, login, nome, senha, tipo FROM {$this->table_name} WHERE id = ? LIMIT 1 OFFSET 0";
+    public function buscaPorId($id) {
+        $query = "SELECT id, login, nome, senha, tipo FROM {$this->table_name} WHERE id = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $id);
         $stmt->execute();
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $usuario = new Usuario($row['id'], $row['login'], $row['senha'], $row['nome'], $row['tipo']);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return new Usuario($row['id'], $row['login'], $row['senha'], $row['nome'], $row['tipo']);
         }
 
-        return $usuario;
+        return null;
     }
 
     public function buscaPorLogin($login) {
-        $usuario = null;
-
-        $query = "SELECT id, login, nome, senha, tipo FROM {$this->table_name} WHERE login = ? LIMIT 1 OFFSET 0";
+        $query = "SELECT id, login, nome, senha, tipo FROM {$this->table_name} WHERE login = ? LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(1, $login);
         $stmt->execute();
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            $usuario = new Usuario($row['id'], $row['login'], $row['senha'], $row['nome'], $row['tipo']);
+        if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            return new Usuario($row['id'], $row['login'], $row['senha'], $row['nome'], $row['tipo']);
         }
 
-        return $usuario;
+        return null;
     }
 
     public function buscaTodos() {
@@ -151,4 +159,3 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao {
         return $usuarios;
     }
 }
-?>
