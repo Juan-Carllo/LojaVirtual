@@ -47,13 +47,8 @@ CREATE TABLE produto (
 WITH admin_address AS (
     INSERT INTO endereco (rua, numero, complemento, bairro, cep, cidade, estado)
     VALUES (
-        'Casa',      -- rua (você pode trocar por um valor real)
-        '1',      -- número
-        'ComplementoDaCasa',      -- complemento
-        'CasaBairro',      -- bairro
-        '123',      -- CEP
-        'CasaCaxias',      -- cidade
-        'RS'       -- estado
+        'Casa', '1', 'ComplementoDaCasa', 'CasaBairro',
+        '123', 'CasaCaxias', 'RS'
     )
     RETURNING id
 )
@@ -65,3 +60,25 @@ SELECT
     'admin',
     id
 FROM admin_address;
+
+-- Inserção do fornecedor inicial
+INSERT INTO fornecedores (nome, cnpj)
+VALUES ('Farmácia', '00.000.000/0001-00');
+
+-- Inserção de 15 produtos (anabolizantes) com preços médios
+INSERT INTO produto (nome, preco, quantidade, fornecedor_id) VALUES
+('Oxandrolona 10mg 100 cps',        180.00, 50, 1),
+('Dianabol (Metandrostenolona)',   150.00, 50, 1),
+('Durateston (Testosterona)',      120.00, 50, 1),
+('Deca Durabolin (Nandrolona)',    130.00, 50, 1),
+('Stanozolol (Winstrol)',          160.00, 50, 1),
+('Primobolan (Metenolona)',        270.00, 50, 1),
+('Boldenona 200mg/ml',             140.00, 50, 1),
+('Trembolona Acetato',             200.00, 50, 1),
+('Masteron (Drostanolona)',        230.00, 50, 1),
+('Halotestin (Fluoximesterona)',   250.00, 50, 1),
+('Proviron (Mesterolona)',         100.00, 50, 1),
+('Anadrol (Oximetolona)',          220.00, 50, 1),
+('Clenbuterol 40mcg 100 cps',      110.00, 50, 1),
+('Enantato de Testosterona',       125.00, 50, 1),
+('Sustanon 250',                   150.00, 50, 1);

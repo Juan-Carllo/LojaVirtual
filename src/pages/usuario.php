@@ -1,14 +1,18 @@
 <?php
 // pages/usuario.php
-// Sessão iniciada em index.php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
     header("Location: /index.php/home");
     exit;
 }
+
 require_once __DIR__ . '/../fachada.php';
+require_once __DIR__ . '/header.php';
+
 $dao = $factory->getUsuarioDao();
 
-// Exclusão inline: se veio delete_id via POST
+// Exclusão inline
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $usuarioRem = $dao->buscaPorId((int)$_POST['delete_id']);
     if ($usuarioRem) {
@@ -18,12 +22,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     exit;
 }
 
-// Erros vindos de validação em salvaUsuario
+// Erros de validação
 $error_login = $_GET['error_login'] ?? '';
 $error_nome  = $_GET['error_nome']  ?? '';
 $error_senha = $_GET['error_senha'] ?? '';
 
-// Dados para reabertura de modal em caso de erro
 $modalData = [
     'id'          => $_GET['id'] ?? '',
     'login'       => $_GET['login'] ?? '',
@@ -38,7 +41,6 @@ $modalData = [
     'estado'      => $_GET['estado'] ?? ''
 ];
 
-// Busca via GET q
 $q = trim($_GET['q'] ?? '');
 $usuarios = $dao->buscaTodos();
 if ($q !== '') {
@@ -47,6 +49,7 @@ if ($q !== '') {
     });
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -55,7 +58,11 @@ if ($q !== '') {
     <title>Admin – Usuários</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-gray-100 p-6">
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+<?php require_once __DIR__ . '/header.php'; ?>
+
+<main class="flex-1 p-6">
     <h1 class="text-2xl font-bold mb-4">Usuários</h1>
 
     <!-- Busca e Novo -->
@@ -104,7 +111,8 @@ if ($q !== '') {
                         data-estado="<?= htmlspecialchars($u->getEndereco()->getEstado() ?? '', ENT_QUOTES) ?>">
                         Editar
                     </button>
-                    <form method="post" action="/index.php/usuario" onsubmit="return confirm('Confirma a exclusão deste usuário?');" class="inline">
+                    <form method="post" action="/index.php/usuario" class="inline"
+                          onsubmit="return confirm('Confirma a exclusão deste usuário?');">
                         <input type="hidden" name="delete_id" value="<?= $u->getId() ?>">
                         <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Excluir</button>
                     </form>
@@ -147,7 +155,6 @@ if ($q !== '') {
                     <option value="admin" <?= $modalData['tipo']==='admin'?'selected':'' ?>>Administrador</option>
                 </select>
 
-                <!-- Endereço -->
                 <?php foreach (['rua','numero','complemento','bairro','cep','cidade','estado'] as $field): ?>
                     <label class="block mb-1 text-sm"><?= ucfirst($field) ?></label>
                     <input name="<?= $field ?>" id="<?= $field ?>" required
@@ -162,48 +169,50 @@ if ($q !== '') {
             </form>
         </div>
     </div>
+</main>
 
-    <!-- JS Modal -->
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const modal       = document.getElementById('userModal');
-        const overlay     = document.getElementById('modalOverlay');
-        const btnNovo     = document.getElementById('btnNovo');
-        const closeBtn    = document.getElementById('closeModal');
-        const cancelBtn   = document.getElementById('cancelBtn');
-        const editBtns    = document.querySelectorAll('.editarBtn');
-        const title       = document.getElementById('modalTitle');
-        const fields      = ['userId','login','nome','senha','tipo','rua','numero','complemento','bairro','cep','cidade','estado'];
+<!-- JS Modal -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('userModal');
+    const overlay = document.getElementById('modalOverlay');
+    const btnNovo = document.getElementById('btnNovo');
+    const closeBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const editBtns = document.querySelectorAll('.editarBtn');
+    const title = document.getElementById('modalTitle');
+    const fields = ['userId','login','nome','senha','tipo','rua','numero','complemento','bairro','cep','cidade','estado'];
 
-        function open(edit, data) {
-            title.textContent = edit ? 'Editar Usuário' : 'Novo Usuário';
-            fields.forEach(f => {
-                const el = document.getElementById(f);
-                if (!el) return;
-                el.value = data[f] || '';
-                if (f === 'senha') el.value = '';
-            });
-            modal.classList.remove('hidden');
-        }
+    function open(edit, data) {
+        title.textContent = edit ? 'Editar Usuário' : 'Novo Usuário';
+        fields.forEach(f => {
+            const el = document.getElementById(f);
+            if (!el) return;
+            el.value = data[f] || '';
+            if (f === 'senha') el.value = '';
+        });
+        modal.classList.remove('hidden');
+    }
 
-        function closeModalFn() { modal.classList.add('hidden'); }
+    function closeModalFn() {
+        modal.classList.add('hidden');
+    }
 
-        btnNovo.addEventListener('click', () => open(false, {}));
-        closeBtn.addEventListener('click', closeModalFn);
-        cancelBtn.addEventListener('click', closeModalFn);
-        overlay.addEventListener('click', closeModalFn);
+    btnNovo.addEventListener('click', () => open(false, {}));
+    closeBtn.addEventListener('click', closeModalFn);
+    cancelBtn.addEventListener('click', closeModalFn);
+    overlay.addEventListener('click', closeModalFn);
 
-        editBtns.forEach(btn => btn.addEventListener('click', () => {
-            const data = {};
-            fields.forEach(f => data[f] = btn.dataset[f] || (f==='userId'? btn.dataset.id : ''));
-            open(true, data);
-        }));
+    editBtns.forEach(btn => btn.addEventListener('click', () => {
+        const data = {};
+        fields.forEach(f => data[f] = btn.dataset[f] || (f==='userId'? btn.dataset.id : ''));
+        open(true, data);
+    }));
 
-        // reabre modal em caso de erro de validação
-        <?php if($error_login||$error_nome||$error_senha): ?>
-        open(<?= $modalData['id']? 'true':'false' ?>, <?= json_encode($modalData) ?>);
-        <?php endif; ?>
-    });
-    </script>
+    <?php if($error_login || $error_nome || $error_senha): ?>
+    open(<?= $modalData['id'] ? 'true' : 'false' ?>, <?= json_encode($modalData) ?>);
+    <?php endif; ?>
+});
+</script>
 </body>
 </html>
