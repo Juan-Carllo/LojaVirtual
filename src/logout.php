@@ -1,10 +1,10 @@
 <?php
+// pages/logout.php
 
-session_start();
+// Já iniciou sessão no index.php
 session_unset();
 session_destroy();
 
-// Redireciona para a página inicial
-header("Location: index.php");
+// Redireciona para a rota de login via front-controller
+header("Location: /index.php/login");
 exit;
-?>

@@ -1,9 +1,8 @@
 <?php
 
-include_once('../DaoFactory.php');
-include_once('../UsuarioDao.php');
-include_once('../FornecedorDAO.php');
-include_once('../ProdutoDAO.php');
+include_once('PostgresUsuarioDao.php');
+include_once('PostgresFornecedorDao.php');
+include_once('PostgresProdutoDao.php');
 include_once('PostgresUsuarioDao.php');
 
 class PostgresDaoFactory extends DaoFactory {

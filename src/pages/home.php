@@ -1,73 +1,95 @@
 <?php
+// pages/home.php
+// Sessão já iniciada no index.php
+
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: validaLogin.php");
+    header("Location: /index.php/login");
     exit;
 }
 
 $usuario_nome = htmlspecialchars($_SESSION['usuario_nome']);
-$usuario_tipo = $_SESSION['usuario_tipo'] ?? 'cliente';
-$pageTitle = "Dashboard";
+
+// Carrega a fachada e busca os produtos
+require_once __DIR__ . '/../fachada.php';
+$dao = $factory->getProdutoDao();
+
+// Lógica de busca via GET q
+if (!empty($_GET['q'])) {
+    $busca = trim($_GET['q']);
+    $produtos = $dao->buscaPorNome($busca);
+} else {
+    $produtos = $dao->buscaTodos();
+}
 ?>
 <!DOCTYPE HTML>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?></title>
+    <title>Amigos do Casa - Produtos</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body class="bg-gray-200 flex">
-    <div class="w-full flex flex-col">
-        <!-- Header estilizado com Tailwind -->
-        <header class="bg-green-600 text-white p-4 flex justify-between items-center">
-            <h1 class="text-xl font-semibold">Loja Virtual - Dashboard</h1>
-            <div class="text-sm">
-                Bem-vindo, <?php echo $usuario_nome; ?> |
-                <a href="../logout.php" class="underline">Logout</a>
-            </div>
-        </header>
-        <div class="flex flex-1">
-            <!-- Sidebar -->
-            <nav class="w-56 bg-white border-r border-gray-300 p-4 h-screen overflow-auto">
-                <?php if ($usuario_tipo !== 'cliente'): ?>
-                    <div class="menu-section mb-6">
-                        <h3 class="text-lg font-medium text-green-600 mb-2">Cadastros</h3>
-                        <ul class="space-y-1">
-                            <li><a href="usuario.php" class="text-gray-700 hover:text-green-600">Usuários</a></li>
-                            <li><a href="fornecedor.php" class="text-gray-700 hover:text-green-600">Fornecedores</a></li>
-                            <li><a href="produto.php" class="text-gray-700 hover:text-green-600">Produtos</a></li>
-                            <li><a href="estoque.php" class="text-gray-700 hover:text-green-600">Estoque</a></li>
-                        </ul>
-                    </div>
-                    <div class="menu-section mb-6">
-                        <h3 class="text-lg font-medium text-green-600 mb-2">Pedidos</h3>
-                        <ul class="space-y-1">
-                            <li><a href="consultar_pedidos.php" class="text-gray-700 hover:text-green-600">Consultar Pedidos</a></li>
-                        </ul>
-                    </div>
-                    <div class="menu-section mb-6">
-                        <h3 class="text-lg font-medium text-green-600 mb-2">Relatórios</h3>
-                        <ul class="space-y-1">
-                            <li><a href="relatorio_pedidos.php" class="text-gray-700 hover:text-green-600">Relatório de Pedidos</a></li>
-                        </ul>
-                    </div>
-                <?php endif; ?>
-                <!-- Seção Loja disponível para todos os usuários -->
-                <div class="menu-section">
-                    <h3 class="text-lg font-medium text-green-600 mb-2">Loja</h3>
-                    <ul class="space-y-1">
-                        <li><a href="produto.php" class="text-gray-700 hover:text-green-600">Ver Produtos</a></li>
-                        <li><a href="carrinho.php" class="text-gray-700 hover:text-green-600">Carrinho de Compras</a></li>
-                    </ul>
-                </div>
-            </nav>
-            <!-- Main content -->
-            <main class="flex-1 p-6 overflow-auto">
-                <h2 class="text-2xl font-semibold text-green-600 mb-4">Visão Geral</h2>
-                <p class="text-gray-700">Use o menu lateral para navegar pelas funcionalidades do sistema.</p>
-                <!-- Aqui você pode adicionar gráficos, estatísticas ou widgets -->
-            </main>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Header com logo no canto esquerdo e busca -->
+    <header class="bg-white shadow p-4 flex items-center justify-between">
+        <div class="flex items-center flex-1 space-x-4">
+            <!-- Logo Amigos do Casa -->
+            <img src="/assets/Amigos_do_Casa_logo.png"
+                 alt="Logo Amigos do Casa"
+                 class="h-12 w-auto" />
+
+            <!-- Formulário de busca -->
+            <form method="GET" action="/index.php/home" class="flex flex-1">
+                <input
+                    name="q"
+                    type="text"
+                    placeholder="Buscar produtos..."
+                    value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
+                    class="flex-1 border border-gray-300 rounded-l-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <button
+                    type="submit"
+                    class="bg-red-600 hover:bg-red-700 text-white rounded-r-full px-4"
+                >🔍</button>
+            </form>
         </div>
-    </div>
+        <!-- Carrinho e usuário -->
+        <div class="flex items-center space-x-6">
+            <a href="/index.php/carrinho" class="relative text-gray-700 hover:text-red-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.5 7h13L17 13M7 13H5.4M17 13l1.5 7M6 21a1 1 0 100-2 1 1 0 000 2zm12 0a1 1 0 100-2 1 1 0 000 2z" />
+                </svg>
+                <span class="absolute -top-1 -right-2 bg-red-600 text-white text-xs rounded-full px-1"><?= count($_SESSION['carrinho'] ?? []) ?></span>
+            </a>
+            <span class="text-sm">
+                Olá, <?= $usuario_nome ?> |
+                <a href="/index.php/logout" class="text-red-600 hover:underline">Logout</a>
+            </span>
+        </div>
+    </header>
+
+    <!-- Grid de produtos -->
+    <main class="flex-1 p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <?php foreach ($produtos as $p): ?>
+                <div class="bg-white rounded shadow overflow-hidden flex flex-col">
+                    <img
+                        src="<?= htmlspecialchars($p->getImagemUrl() ?: '/assets/placeholder.png') ?>"
+                        alt="<?= htmlspecialchars($p->getNome()) ?>"
+                        class="h-48 w-full object-cover"
+                    />
+                    <div class="p-4 flex-1 flex flex-col">
+                        <h3 class="text-gray-800 font-medium mb-2 flex-1"><?= htmlspecialchars($p->getNome()) ?></h3>
+                        <p class="text-red-600 font-bold mb-4">R$ <?= number_format($p->getPreco(), 2, ',', '.') ?></p>
+                        <a href="/index.php/adicionaCarrinho?produto_id=<?= urlencode($p->getId()) ?>"
+                           class="mt-auto bg-red-600 hover:bg-red-700 text-white text-center py-2 rounded">
+                            Adicionar ao Carrinho
+                        </a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </main>
 </body>
 </html>
