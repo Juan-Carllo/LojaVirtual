@@ -1,5 +1,6 @@
 <?php
-// dao/postgres/PostgresProdutoDao.php
+
+//TODO ADICIONAR METODOS PRA IMAGEM, E INSERÇÃO NO FORM
 
 require_once '/var/www/html/dao/DAO.php';
 require_once '/var/www/html/dao/ProdutoDao.php';

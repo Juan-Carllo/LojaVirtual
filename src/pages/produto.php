@@ -125,17 +125,56 @@ $fornecedores = $fornecedorDao->buscaTodos();
         <?php endforeach; ?>
         </tbody>
     </table>
-    <div id="prodModal" class="fixed inset-0 flex items-center justify-center hidden"><div id="modalOverlay" class="absolute inset-0 backdrop-blur-sm"></div><div class="relative bg-white rounded shadow-lg p-6 z-10 w-full max-w-lg">
-            <div class="flex justify-between mb-4"><h2 id="modalTitle" class="text-xl font-semibold">Novo Produto</h2><button id="closeModal" class="text-gray-500 hover:text-gray-700">✕</button></div>
-            <form id="prodForm" method="post" action="/index.php/produto">
-                <input type="hidden" name="id" id="prodId" value="<?= htmlspecialchars($modalData['id'], ENT_QUOTES) ?>">
-                <label class="block mb-1 text-sm">Nome</label><input name="nome" id="prodNome" required value="<?= htmlspecialchars($modalData['nome'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500"><<?php if ($error_nome): ?><p class="text-red-600 text-sm mb-2"><?= $error_nome ?></p><?php endif; ?>
-                <label class="block mb-1 text-sm">Preço</label><input name="preco" id="prodPreco" required value="<?= htmlspecialchars($modalData['preco'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500"><?php if ($error_preco): ?><p class="text-red-600 text-sm mb-2"><?= $error_preco ?></p><?php endif; ?>
-                <label class="block mb-1 text-sm">Quantidade</label><input name="quantidade" id="prodQtd" required value="<?= htmlspecialchars($modalData['quantidade'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500"><?php if ($error_quantidade): ?><p class="text-red-600 text-sm mb-2"><?= $error_quantidade ?></p><?php endif; ?>
-                <label class="block mb-1 text-sm">Fornecedor</label><select name="fornecedorId" id="prodFornecedorId" required class="w-full border px-3 py-2 rounded mb-4 focus:ring-2 focus:ring-red-500"><option value="">Selecione...</option><?php foreach ($fornecedores as $f): ?><option value="<?= $f->getId() ?>" <?= $modalData['fornecedorId'] == $f->getId() ? 'selected' : '' ?>><?= htmlspecialchars($f->getNome(), ENT_QUOTES) ?></option><?php endforeach; ?></select><?php if ($error_fornecedor): ?><p class="text-red-600 text-sm mb-2"><?= $error_fornecedor ?></p><?php endif; ?>
-                <div class="flex justify-end space-x-2"><button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button><button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar</button></div>
-            </form>
-        </div></div>
+    <div id="prodModal" class="fixed inset-0 flex items-center justify-center hidden">
+    <div id="modalOverlay" class="absolute inset-0 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded shadow-lg p-6 z-10 w-full max-w-lg">
+        <div class="flex justify-between mb-4">
+            <h2 id="modalTitle" class="text-xl font-semibold">Novo Produto</h2>
+            <button id="closeModal" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+
+        <form id="prodForm" method="post" action="/index.php/produto">
+            <input type="hidden" name="id" id="prodId" value="<?= htmlspecialchars($modalData['id'], ENT_QUOTES) ?>">
+
+            <label class="block mb-1 text-sm">Nome</label>
+            <input name="nome" id="prodNome" required value="<?= htmlspecialchars($modalData['nome'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500">
+            <?php if ($error_nome): ?>
+                <p class="text-red-600 text-sm mb-2"><?= $error_nome ?></p>
+            <?php endif; ?>
+
+            <label class="block mb-1 text-sm">Preço</label>
+            <input name="preco" id="prodPreco" required value="<?= htmlspecialchars($modalData['preco'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500">
+            <?php if ($error_preco): ?>
+                <p class="text-red-600 text-sm mb-2"><?= $error_preco ?></p>
+            <?php endif; ?>
+
+            <label class="block mb-1 text-sm">Quantidade</label>
+            <input name="quantidade" id="prodQtd" required value="<?= htmlspecialchars($modalData['quantidade'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500">
+            <?php if ($error_quantidade): ?>
+                <p class="text-red-600 text-sm mb-2"><?= $error_quantidade ?></p>
+            <?php endif; ?>
+
+            <label class="block mb-1 text-sm">Fornecedor</label>
+            <select name="fornecedorId" id="prodFornecedorId" required class="w-full border px-3 py-2 rounded mb-4 focus:ring-2 focus:ring-red-500">
+                <option value="">Selecione...</option>
+                <?php foreach ($fornecedores as $f): ?>
+                    <option value="<?= $f->getId() ?>" <?= $modalData['fornecedorId'] == $f->getId() ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($f->getNome(), ENT_QUOTES) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <?php if ($error_fornecedor): ?>
+                <p class="text-red-600 text-sm mb-2"><?= $error_fornecedor ?></p>
+            <?php endif; ?>
+
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+</div>
     <script>
     document.addEventListener('DOMContentLoaded',()=>{
         const modal = document.getElementById('prodModal');

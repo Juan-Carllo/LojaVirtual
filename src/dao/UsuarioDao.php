@@ -1,5 +1,4 @@
 <?php
-// src/dao/UsuarioDao.php
 
 interface UsuarioDao {
 

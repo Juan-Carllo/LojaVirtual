@@ -29,11 +29,25 @@ class PostgresFornecedorDao extends DAO implements FornecedorDao {
      * Remove um fornecedor pelo ID.
      */
     public function remove($fornecedor) {
+        // Verifica se há produtos vinculados ao fornecedor
+        $verificaSql = "SELECT COUNT(*) FROM produto WHERE fornecedor_id = :id";
+        $verificaStmt = $this->conn->prepare($verificaSql);
+        $verificaStmt->bindValue(':id', $fornecedor->getId(), PDO::PARAM_INT);
+        $verificaStmt->execute();
+        $totalProdutos = $verificaStmt->fetchColumn();
+    
+        if ($totalProdutos > 0) {
+            // Não remove se houver produtos relacionados
+            return false;
+        }
+    
+        // Remove normalmente
         $sql = "DELETE FROM " . $this->table_name . " WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
         $stmt->bindValue(':id', $fornecedor->getId(), PDO::PARAM_INT);
         return $stmt->execute();
     }
+    
 
     /**
      * Atualiza nome e CNPJ de um fornecedor existente.
