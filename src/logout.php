@@ -1,7 +1,9 @@
 <?php
 // pages/logout.php
 
-// Já iniciou sessão no index.php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 session_unset();
 session_destroy();
 
