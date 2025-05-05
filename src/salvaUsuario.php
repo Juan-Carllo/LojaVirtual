@@ -13,18 +13,16 @@ if ($isEdicao && ($_SESSION['usuario_tipo'] ?? '') !== 'admin') {
     exit;
 }
 
-// Inicializa erros
 $erro_login = $erro_nome = $erro_senha = "";
+$erro_rua = $erro_numero = $erro_bairro = $erro_cep = $erro_cidade = $erro_estado = "";
 
 if ($_SERVER["REQUEST_METHOD"] === 'POST') {
-    // 1) Dados do usuário
     $id     = $_POST["id"]     ?? null;
     $login  = trim($_POST["login"]  ?? '');
     $nome   = trim($_POST["nome"]   ?? '');
     $senha  = $_POST["senha"]       ?? '';
-    $tipo   = $_POST["tipo"]        ?? 'cliente';  // padrão
+    $tipo   = $_POST["tipo"]        ?? 'cliente';
 
-    // 2) Endereço
     $rua         = trim($_POST["rua"]         ?? '');
     $numero      = trim($_POST["numero"]      ?? '');
     $complemento = trim($_POST["complemento"] ?? '');
@@ -35,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
 
     $valido = true;
 
-    // Validações
+    // Validações do usuário
     if (empty($login)) {
         $erro_login = "Login é obrigatório!";
         $valido = false;
@@ -46,6 +44,32 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
     }
     if (!$id && empty($senha)) {
         $erro_senha = "Senha é obrigatória!";
+        $valido = false;
+    }
+
+    // Validações do endereço
+    if (empty($rua)) {
+        $erro_rua = "Rua é obrigatória!";
+        $valido = false;
+    }
+    if (empty($numero)) {
+        $erro_numero = "Número é obrigatório!";
+        $valido = false;
+    }
+    if (empty($bairro)) {
+        $erro_bairro = "Bairro é obrigatório!";
+        $valido = false;
+    }
+    if (empty($cep)) {
+        $erro_cep = "CEP é obrigatório!";
+        $valido = false;
+    }
+    if (empty($cidade)) {
+        $erro_cidade = "Cidade é obrigatória!";
+        $valido = false;
+    }
+    if (empty($estado)) {
+        $erro_estado = "Estado é obrigatório!";
         $valido = false;
     }
 
@@ -63,7 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
         $senha_hash = $senha !== '' ? password_hash($senha, PASSWORD_DEFAULT) : null;
 
         if ($id) {
-            // Editar usuário
+            // Editar
             $usuario = $dao->buscaPorId((int)$id);
             if (!$usuario) {
                 header("Location: /index.php/usuario");
@@ -79,9 +103,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
 
             $endereco = $usuario->getEndereco();
             if (!$endereco) {
-                $endereco = new Endereco(
-                    null, $rua, $numero, $complemento, $bairro, $cep, $cidade, $estado
-                );
+                $endereco = new Endereco(null, $rua, $numero, $complemento, $bairro, $cep, $cidade, $estado);
             } else {
                 $endereco->setRua($rua);
                 $endereco->setNumero($numero);
@@ -94,26 +116,13 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
 
             $usuario->setEndereco($endereco);
             $dao->altera($usuario, $endereco);
-
         } else {
-            // Novo cadastro
-            $endereco = new Endereco(
-                null, $rua, $numero, $complemento, $bairro, $cep, $cidade, $estado
-            );
-
-            $usuario = new Usuario(
-                null,
-                $login,
-                $senha_hash,
-                $nome,
-                $tipo,
-                $endereco
-            );
-
+            // Novo
+            $endereco = new Endereco(null, $rua, $numero, $complemento, $bairro, $cep, $cidade, $estado);
+            $usuario = new Usuario(null, $login, $senha_hash, $nome, $tipo, $endereco);
             $dao->insere($usuario, $endereco);
         }
 
-        // Redirecionamento pós-sucesso
         if (isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin') {
             header("Location: /index.php/usuario");
         } else {
@@ -122,11 +131,17 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
         exit;
     }
 
-    // Em caso de erro, redireciona com os dados para reabrir modal
+    // Em caso de erro
     $qs = http_build_query([
         'error_login'   => $erro_login,
         'error_nome'    => $erro_nome,
         'error_senha'   => $erro_senha,
+        'error_rua'     => $erro_rua,
+        'error_numero'  => $erro_numero,
+        'error_bairro'  => $erro_bairro,
+        'error_cep'     => $erro_cep,
+        'error_cidade'  => $erro_cidade,
+        'error_estado'  => $erro_estado,
         'id'            => $id,
         'login'         => $login,
         'nome'          => $nome,
@@ -140,14 +155,10 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
         'estado'        => $estado,
     ]);
 
-    $destino = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin'
-        ? "usuario"
-        : "registrar";
-
+    $destino = (isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin') ? 'usuario' : 'registrar';
     header("Location: /index.php/$destino?$qs");
     exit;
 }
 
-// Se não for POST, redireciona
 header("Location: /index.php/home");
 exit;
