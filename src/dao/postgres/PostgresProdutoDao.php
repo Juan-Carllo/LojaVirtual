@@ -1,14 +1,11 @@
 <?php
 // dao/postgres/PostgresProdutoDao.php
 
-// Carrega a classe base DAO e a interface ProdutoDao
 require_once '/var/www/html/dao/DAO.php';
 require_once '/var/www/html/dao/ProdutoDao.php';
-// Carrega o modelo Produto
 require_once '/var/www/html/model/Produto.php';
 
 class PostgresProdutoDao extends DAO implements ProdutoDao {
-    // Nome da tabela conforme script do banco
     private $table_name = 'produto';
 
     public function insere($produto) {
@@ -21,16 +18,15 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
         $stmt->bindValue(':quantidade',    $produto->getQuantidade());
         $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId());
 
-        if ($stmt->execute()) {
-            return $this->conn->lastInsertId();
-        }
-        return -1;
+        return $stmt->execute()
+            ? $this->conn->lastInsertId()
+            : -1;
     }
 
     public function remove($produto) {
         $query = 'DELETE FROM ' . $this->table_name . ' WHERE id = :id';
         $stmt = $this->conn->prepare($query);
-        $stmt->bindValue(':id', $produto->getId());
+        $stmt->bindValue(':id', $produto->getId(), PDO::PARAM_INT);
         return $stmt->execute();
     }
 
@@ -43,7 +39,7 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
         $stmt->bindValue(':preco',         $produto->getPreco());
         $stmt->bindValue(':quantidade',    $produto->getQuantidade());
         $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId());
-        $stmt->bindValue(':id',            $produto->getId());
+        $stmt->bindValue(':id',            $produto->getId(), PDO::PARAM_INT);
         return $stmt->execute();
     }
 
@@ -53,35 +49,34 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            return new Produto(
-                $row['id'],
-                $row['nome'],
-                $row['preco'],
-                $row['quantidade'],
-                $row['fornecedor_id']
-            );
+        if (!$row) {
+            return null;
         }
-        return null;
+        // Corrigido para passar argumentos na ordem esperada pelo construtor
+        return new Produto(
+            $row['nome'],
+            (float)$row['preco'],
+            (int)$row['quantidade'],
+            (int)$row['fornecedor_id'],
+            (int)$row['id']
+        );
     }
 
-    // Método de busca por nome adicionado
     public function buscaPorNome($nome) {
         $query = 'SELECT * FROM ' . $this->table_name .
                  ' WHERE nome ILIKE :nome ORDER BY nome';
         $stmt = $this->conn->prepare($query);
-        $like = "%{$nome}%";
-        $stmt->bindValue(':nome', $like, PDO::PARAM_STR);
+        $stmt->bindValue(':nome', "%{$nome}%", PDO::PARAM_STR);
         $stmt->execute();
 
         $result = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $result[] = new Produto(
-                $row['id'],
                 $row['nome'],
-                $row['preco'],
-                $row['quantidade'],
-                $row['fornecedor_id']
+                (float)$row['preco'],
+                (int)$row['quantidade'],
+                (int)$row['fornecedor_id'],
+                (int)$row['id']
             );
         }
         return $result;
@@ -90,14 +85,15 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
     public function buscaTodos() {
         $query = 'SELECT * FROM ' . $this->table_name . ' ORDER BY nome';
         $stmt = $this->conn->query($query);
+
         $produtos = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $produtos[] = new Produto(
-                $row['id'],
                 $row['nome'],
-                $row['preco'],
-                $row['quantidade'],
-                $row['fornecedor_id']
+                (float)$row['preco'],
+                (int)$row['quantidade'],
+                (int)$row['fornecedor_id'],
+                (int)$row['id']
             );
         }
         return $produtos;

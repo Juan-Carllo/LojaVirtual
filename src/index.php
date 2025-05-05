@@ -4,13 +4,12 @@
 // captura apenas o path
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// 1) Servir estáticos (assets/css/js/imagens) tanto em /assets/... quando em /index.php/assets/... 
+// 1) Servir estáticos (assets/css/js/imagens) tanto em /assets/... quanto em /index.php/assets/...
 if (preg_match('#^(/index\.php)?/assets/#', $request)) {
     // remove o /index.php prefixo, se houver
     $staticPath = preg_replace('#^/index\.php#', '', $request);
     $file = __DIR__ . $staticPath;
     if (file_exists($file) && !is_dir($file)) {
-        // envia mime e conteúdo
         $mime = mime_content_type($file) ?: 'application/octet-stream';
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($file));
@@ -22,8 +21,8 @@ if (preg_match('#^(/index\.php)?/assets/#', $request)) {
     }
 }
 
-require_once __DIR__ . '/fachada.php';
 session_start();
+require_once __DIR__ . '/fachada.php';
 
 // debug (remova em produção)
 ini_set('display_errors', 1);
@@ -32,6 +31,7 @@ error_reporting(E_ALL);
 
 // 2) Roteamento via PATH_INFO
 switch ($request) {
+    // login / home público
     case '/':
     case '/index.php':
     case '/login':
@@ -49,11 +49,28 @@ switch ($request) {
         include __DIR__ . '/pages/home.php';
         break;
 
+    // área de administração
     case '/usuario':
     case '/index.php/usuario':
         include __DIR__ . '/pages/usuario.php';
         break;
 
+    case '/produto':
+    case '/index.php/produto':
+        include __DIR__ . '/pages/produto.php';
+        break;
+
+    case '/fornecedor':
+    case '/index.php/fornecedor':
+        include __DIR__ . '/pages/fornecedor.php';
+        break;
+
+    case '/estoque':
+    case '/index.php/estoque':
+        include __DIR__ . '/pages/estoque.php';
+        break;
+
+    // autenticação / ações
     case '/validaLogin':
     case '/index.php/validaLogin':
         include __DIR__ . '/validaLogin.php';
@@ -69,6 +86,7 @@ switch ($request) {
         include __DIR__ . '/logout.php';
         break;
 
+    // 404
     default:
         http_response_code(404);
         echo '<h1 style="text-align:center;margin-top:2rem;">404 — Página não encontrada</h1>';

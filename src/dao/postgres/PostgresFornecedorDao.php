@@ -6,78 +6,89 @@ include_once 'src/dao/FornecedorDao.php';
 
 class PostgresFornecedorDao extends DAO implements FornecedorDao {
 
+    /**
+     * Nome da tabela no banco de dados
+     */
     private $table_name = 'fornecedores';
 
+    /**
+     * Insere um novo fornecedor e retorna o ID ou -1 em caso de erro.
+     */
     public function insere($fornecedor) {
-        $query = "INSERT INTO " . $this->table_name . " (nome, contato) 
-                  VALUES (:nome, :contato)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':nome',    $fornecedor->getNome());
-        $stmt->bindParam(':contato', $fornecedor->getContato());
+        $sql = "INSERT INTO " . $this->table_name . " (nome, cnpj) VALUES (:nome, :cnpj)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':nome', $fornecedor->getNome());
+        $stmt->bindValue(':cnpj', $fornecedor->getCnpj());
 
-        if ($stmt->execute()) {
-            return $this->conn->lastInsertId();
-        } else {
-            return -1;
-        }
+        return $stmt->execute()
+            ? $this->conn->lastInsertId()
+            : -1;
     }
 
+    /**
+     * Remove um fornecedor pelo ID.
+     */
     public function remove($fornecedor) {
-        $query = "DELETE FROM " . $this->table_name . " WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $fornecedor->getId());
+        $sql = "DELETE FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':id', $fornecedor->getId(), PDO::PARAM_INT);
         return $stmt->execute();
     }
 
+    /**
+     * Atualiza nome e CNPJ de um fornecedor existente.
+     */
     public function altera($fornecedor) {
-        $query = "UPDATE " . $this->table_name . " 
-                  SET nome = :nome, contato = :contato 
-                  WHERE id = :id";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':nome',    $fornecedor->getNome());
-        $stmt->bindParam(':contato', $fornecedor->getContato());
-        $stmt->bindParam(':id',      $fornecedor->getId());
+        $sql = "UPDATE " . $this->table_name . " SET nome = :nome, cnpj = :cnpj WHERE id = :id";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':nome', $fornecedor->getNome());
+        $stmt->bindValue(':cnpj', $fornecedor->getCnpj());
+        $stmt->bindValue(':id', $fornecedor->getId(), PDO::PARAM_INT);
         return $stmt->execute();
     }
 
+    /**
+     * Busca um fornecedor pelo ID.
+     */
     public function buscaPorId($id) {
-        $query = "SELECT id, nome, contato 
-                  FROM " . $this->table_name . " 
-                  WHERE id = ? LIMIT 1 OFFSET 0";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $id);
+        $sql = "SELECT id, nome, cnpj FROM " . $this->table_name . " WHERE id = :id LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            return new Fornecedor($row['id'], $row['nome'], $row['contato']);
-        }
-        return null;
+
+        return $row
+            ? new Fornecedor($row['id'], $row['nome'], $row['cnpj'])
+            : null;
     }
 
+    /**
+     * Busca fornecedores cujo nome contém o termo informado.
+     */
     public function buscaPorNome($nome) {
-        $query = "SELECT id, nome, contato 
-                  FROM " . $this->table_name . " 
-                  WHERE nome ILIKE ? ORDER BY nome";
-        $param = "%{$nome}%";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(1, $param);
+        $sql = "SELECT id, nome, cnpj FROM " . $this->table_name . " WHERE nome ILIKE :nome ORDER BY nome";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':nome', "%{$nome}%");
         $stmt->execute();
+
         $fornecedores = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $fornecedores[] = new Fornecedor($row['id'], $row['nome'], $row['contato']);
+            $fornecedores[] = new Fornecedor($row['id'], $row['nome'], $row['cnpj']);
         }
         return $fornecedores;
     }
 
+    /**
+     * Retorna todos os fornecedores.
+     */
     public function buscaTodos() {
-        $query = "SELECT id, nome, contato 
-                  FROM " . $this->table_name . " 
-                  ORDER BY id ASC";
-        $stmt = $this->conn->prepare($query);
+        $sql = "SELECT id, nome, cnpj FROM " . $this->table_name . " ORDER BY id ASC";
+        $stmt = $this->conn->prepare($sql);
         $stmt->execute();
+
         $fornecedores = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $fornecedores[] = new Fornecedor($row['id'], $row['nome'], $row['contato']);
+            $fornecedores[] = new Fornecedor($row['id'], $row['nome'], $row['cnpj']);
         }
         return $fornecedores;
     }

@@ -1,18 +1,31 @@
 <?php
+// model/Usuario.php
+
 class Usuario {
-    
     private $id;
     private $login;
     private $senha;
     private $nome;
-    private $tipo; // <-- Novo campo
+    private $tipo;
+    private $enderecoId;
+    private $endereco; // Instância de Endereco
 
-    public function __construct($id, $login, $senha, $nome, $tipo) {
+    /**
+     * @param int|null       $id
+     * @param string         $login
+     * @param string         $senha
+     * @param string         $nome
+     * @param string         $tipo
+     * @param Endereco|null  $endereco
+     */
+    public function __construct($id, $login, $senha, $nome, $tipo, $endereco = null) {
         $this->id = $id;
         $this->login = $login;
         $this->senha = $senha;
         $this->nome = $nome;
         $this->tipo = $tipo;
+        $this->endereco = $endereco;
+        $this->enderecoId = $endereco ? $endereco->getId() : null;
     }
 
     public function getId() {
@@ -31,14 +44,6 @@ class Usuario {
         $this->login = $login;
     }
 
-    public function getNome() {
-        return $this->nome;
-    }
-
-    public function setNome($nome) {
-        $this->nome = $nome;
-    }
-
     public function getSenha() {
         return $this->senha;
     }
@@ -47,12 +52,37 @@ class Usuario {
         $this->senha = $senha;
     }
 
+    public function getNome() {
+        return $this->nome;
+    }
+
+    public function setNome($nome) {
+        $this->nome = $nome;
+    }
+
     public function getTipo() {
         return $this->tipo;
     }
 
     public function setTipo($tipo) {
         $this->tipo = $tipo;
+    }
+
+    public function getEnderecoId() {
+        return $this->enderecoId;
+    }
+
+    public function setEnderecoId($enderecoId) {
+        $this->enderecoId = $enderecoId;
+    }
+
+    public function getEndereco() {
+        return $this->endereco;
+    }
+
+    public function setEndereco($endereco) {
+        $this->endereco = $endereco;
+        $this->enderecoId = $endereco ? $endereco->getId() : null;
     }
 }
 ?>
