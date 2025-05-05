@@ -1,5 +1,7 @@
 <?php
 // pages/produto.php
+
+// se não tiver seção, inicia uma 
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
@@ -196,6 +198,7 @@ $fornecedores = $fornecedorDao->buscaTodos();
 </main>
 
 <script>
+// javascript do modal de inserção e edição
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('prodModal');
     const overlay = document.getElementById('modalOverlay');

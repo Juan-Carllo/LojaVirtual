@@ -17,6 +17,7 @@ class Fornecedor {
         $this->cnpj = $cnpj;
     }
 
+    // getters e setters
     public function getId() {
         return $this->id;
     }

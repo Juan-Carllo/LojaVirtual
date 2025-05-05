@@ -28,6 +28,7 @@ class Usuario {
         $this->enderecoId = $endereco ? $endereco->getId() : null;
     }
 
+    // getters e setters
     public function getId() {
         return $this->id;
     }

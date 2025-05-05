@@ -1,6 +1,7 @@
 <?php
 // pages/salvaUsuario.php
 
+// se não tiver seção, inicia uma 
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/fachada.php';
 
@@ -84,6 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] === 'POST') {
     }
 
     if ($valido) {
+        // encripta senha
         $senha_hash = $senha !== '' ? password_hash($senha, PASSWORD_DEFAULT) : null;
 
         if ($id) {

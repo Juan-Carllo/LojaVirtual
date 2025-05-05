@@ -5,8 +5,14 @@ include_once('src/dao/UsuarioDao.php');
 
 class PostgresUsuarioDao extends DAO implements UsuarioDao
 {
+    /**
+     * Nome da tabela no banco de dados
+     */
     private $table_name = 'usuario';
 
+    /**
+     * Insere um novo usuário (e endereço) e retorna o ID ou -1 em caso de erro.
+     */
     public function insere($usuario, $endereco)
     {
         try {
@@ -72,6 +78,9 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao
         }
     }
 
+    /**
+     * Altera usuário (e endereço)
+     */
     public function altera($usuario, $endereco)
     {
         try {
@@ -142,6 +151,9 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao
         }
     }
 
+    /**
+     * Remove usuário
+     */
     public function remove($usuario)
     {
         $query = "DELETE FROM {$this->table_name} WHERE id = :id";
@@ -151,6 +163,9 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao
         return $stmt->execute();
     }
 
+    /**
+     * Busca usuário por ID
+     */
     public function buscaPorId($id)
     {
         $query = "SELECT u.id, u.login, u.nome, u.senha, u.tipo,
@@ -182,6 +197,9 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao
         return null;
     }
 
+    /**
+     * Busca usuário por login
+     */
     public function buscaPorLogin($login)
     {
         $query = "SELECT id, login, nome, senha, tipo FROM {$this->table_name} WHERE login = ? LIMIT 1";
@@ -196,6 +214,9 @@ class PostgresUsuarioDao extends DAO implements UsuarioDao
         return null;
     }
 
+    /**
+     * Busca todos os usuários (e carrega seus respectivos endereços)
+     */
     public function buscaTodos()
     {
         $query = "SELECT u.id, u.login, u.senha, u.nome, u.tipo,

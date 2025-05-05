@@ -1,12 +1,10 @@
 <?php
-// index.php (na raiz do projeto)
 
 // captura apenas o path
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// 1) Servir estáticos (assets/css/js/imagens) tanto em /assets/... quanto em /index.php/assets/...
+// assets
 if (preg_match('#^(/index\.php)?/assets/#', $request)) {
-    // remove o /index.php prefixo, se houver
     $staticPath = preg_replace('#^/index\.php#', '', $request);
     $file = __DIR__ . $staticPath;
     if (file_exists($file) && !is_dir($file)) {
@@ -21,15 +19,16 @@ if (preg_match('#^(/index\.php)?/assets/#', $request)) {
     }
 }
 
+// inicia seção
 session_start();
 require_once __DIR__ . '/fachada.php';
 
-// debug (remova em produção)
+// TODO remover quando não precisar de debug de erros
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// 2) Roteamento via PATH_INFO
+// roteamento
 switch ($request) {
     // login / home público
     case '/':

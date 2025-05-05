@@ -1,20 +1,19 @@
 <?php
 // pages/registrar.php
 
-// 1) Ajuste do include da fachada (volta uma pasta)
 require_once __DIR__ . '/../fachada.php';
 
-// 2) Inicializa sessão, caso ainda não exista
+// se não tiver seção, inicia uma
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// 3) Cria instância de usuário com tipo 'cliente'
+// cria instância de usuário com tipo 'cliente'
 $usuario = new Usuario(null, null, null, null, 'cliente');
-// 3b) Cria instância de Endereco vazia
+// cria instância de Endereco vazia
 $endereco = new Endereco(null, '', '', '', '', '', '', '');
 
-// 4) Captura erros na querystring
+// Captura erros na querystring
 $erro_login = $_GET['erro_login'] ?? '';
 $erro_nome  = $_GET['erro_nome']  ?? '';
 $erro_senha = $_GET['erro_senha'] ?? '';
@@ -22,11 +21,9 @@ $erro_senha = $_GET['erro_senha'] ?? '';
 ?>
 <?php 
   $pageTitle = "Registro"; 
-  // 5) Inclui header corretamente
   require_once __DIR__ . '/../components/header.php'; 
 ?>
 <?php
-  // 6) Inclui o componente do card (define renderCard)
   require_once __DIR__ . '/../components/card.php';
 
   // começa a capturar o html
@@ -177,8 +174,6 @@ $erro_senha = $_GET['erro_senha'] ?? '';
 
 <?php
   $content = ob_get_clean();
-  // 7) Renderiza o cartão com título e conteúdo
   renderCard('Registro', $content);
-  // 8) Inclui o footer corretamente
   require_once __DIR__ . '/../components/footer.php';
 ?>

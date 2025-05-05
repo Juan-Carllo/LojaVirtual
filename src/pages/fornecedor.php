@@ -1,5 +1,7 @@
 <?php
 // pages/fornecedor.php
+
+// se não tiver seção, inicia nova
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
@@ -170,6 +172,7 @@ if ($q !== '') {
 </main>
 
 <script>
+// javascript do modal de edição e inserção
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('fornModal');
     const overlay = document.getElementById('modalOverlay');

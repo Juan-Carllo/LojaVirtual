@@ -1,4 +1,5 @@
 <?php
+// se não tiver seção, inicia nova
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -52,6 +53,7 @@ $_SESSION['usuario_tipo'] = $_SESSION['usuario_tipo'] ?? 'cliente';
 </header>
 
 <script>
+// javascript do dropdown de ações
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('dropdown-btn');
     const menu = document.getElementById('dropdown-menu');

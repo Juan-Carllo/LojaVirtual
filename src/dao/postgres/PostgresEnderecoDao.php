@@ -8,8 +8,16 @@ require_once '/var/www/html/dao/EnderecoDao.php';
 require_once __DIR__ . '/../../model/Endereco.php';
 
 class PostgresEnderecoDao extends DAO implements EnderecoDao {
+
+    /**
+     * Nome da tabela no banco de dados
+     */
     private $table_name = 'endereco';
 
+
+    /**
+     * Insere um novo endereço e retorna o ID ou -1 em caso de erro.
+     */
     public function insere($endereco) {
         $query = 'INSERT INTO ' . $this->table_name .
                  ' (rua, numero, complemento, bairro, cep, cidade, estado) VALUES ' .
@@ -29,6 +37,9 @@ class PostgresEnderecoDao extends DAO implements EnderecoDao {
         return -1;
     }
 
+    /**
+     * Remove um endereço pelo ID.
+     */
     public function remove($endereco) {
         $query = 'DELETE FROM ' . $this->table_name . ' WHERE id = :id';
         $stmt = $this->conn->prepare($query);
@@ -36,6 +47,9 @@ class PostgresEnderecoDao extends DAO implements EnderecoDao {
         return $stmt->execute();
     }
 
+    /**
+     *  Altera um endereço
+     */
     public function altera($endereco) {
         $query = 'UPDATE ' . $this->table_name .
                  ' SET rua = :rua, numero = :numero, complemento = :complemento, ' .
@@ -53,6 +67,9 @@ class PostgresEnderecoDao extends DAO implements EnderecoDao {
         return $stmt->execute();
     }
 
+    /**
+     * Busca um endereço pelo ID.
+     */
     public function buscaPorId($id) {
         $query = 'SELECT * FROM ' . $this->table_name . ' WHERE id = :id LIMIT 1';
         $stmt = $this->conn->prepare($query);
@@ -74,6 +91,9 @@ class PostgresEnderecoDao extends DAO implements EnderecoDao {
         return null;
     }
 
+    /**
+     * Retorna todos os endereços.
+     */
     public function buscaTodos() {
         $query = 'SELECT * FROM ' . $this->table_name . ' ORDER BY id';
         $stmt = $this->conn->query($query);

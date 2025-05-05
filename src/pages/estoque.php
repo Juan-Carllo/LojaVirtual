@@ -1,5 +1,7 @@
 <?php
 // pages/estoque.php
+
+// se não tiver seção, inicia nova
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if ($_SESSION['usuario_tipo'] !== 'admin') {
@@ -105,6 +107,7 @@ $produtos = $q !== '' ? $dao->buscaPorNome($q) : $dao->buscaTodos();
 </div>
 
 <script>
+// javascript do modal de edição
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('editModal');
     const overlay = document.getElementById('modalOverlay');

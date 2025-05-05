@@ -1,4 +1,6 @@
 <?php
+
+// Se não tiver seção, inicia uma
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

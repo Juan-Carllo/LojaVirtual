@@ -7,6 +7,7 @@ class Produto {
     private $fornecedorId;
     private $imagem; // Novo atributo
 
+    // constructor
     public function __construct($nome = "", $preco = 0.0, $quantidade = 0, $fornecedorId = null, $id = null, $imagem = null) {
         $this->nome = $nome;
         $this->preco = $preco;
@@ -16,6 +17,7 @@ class Produto {
         $this->imagem = $imagem;
     }
 
+    // getters e setters
     public function getId() { return $this->id; }
     public function getNome() { return $this->nome; }
     public function getPreco() { return $this->preco; }

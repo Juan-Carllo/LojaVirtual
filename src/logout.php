@@ -1,6 +1,7 @@
 <?php
 // pages/logout.php
 
+// se não tiver seção, inicia nova
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }

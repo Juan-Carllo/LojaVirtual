@@ -1,6 +1,7 @@
 <?php
 include_once "fachada.php";
 
+// inicia uma seção
 session_start();
 
 ini_set('display_errors', 1);
@@ -18,11 +19,10 @@ if ($usuario) {
         // credenciais OK
         $_SESSION['usuario_id']    = $usuario->getId();
         $_SESSION['usuario_nome']  = $usuario->getNome();
-        $_SESSION['usuario_tipo']  = $usuario->getTipo();   // ← adicione isto!
+        $_SESSION['usuario_tipo']  = $usuario->getTipo();
         header("Location: index.php/home");
         exit;
     } else {
-        
         $_SESSION['erro_login'] = 'Senha inválida.';
         header("Location: index.php");  
         exit;
@@ -32,6 +32,5 @@ if ($usuario) {
     header("Location: index.php");  
     exit;
 }
-
 
 ?>

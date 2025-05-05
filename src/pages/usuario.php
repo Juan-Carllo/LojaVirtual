@@ -1,4 +1,6 @@
 <?php
+
+// Se não tiver seção, inicia uma
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
@@ -10,7 +12,6 @@ require_once __DIR__ . '/../fachada.php';
 
 $dao = $factory->getUsuarioDao();
 
-// ✅ MOVEMOS AQUI PARA CIMA ANTES DE QUALQUER OUTPUT
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $usuarioRem = $dao->buscaPorId((int)$_POST['delete_id']);
     if ($usuarioRem) {
@@ -20,7 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     exit;
 }
 
-// ❌ NÃO PODE TER OUTPUT ANTES DE HEADER
 require_once __DIR__ . '/header.php';
 
 // Erros e dados para reabrir modal
@@ -164,6 +164,7 @@ if ($q !== '') {
 </main>
 
 <script>
+// javascript do modal de edição e inserção
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('userModal');
     const overlay = document.getElementById('modalOverlay');
