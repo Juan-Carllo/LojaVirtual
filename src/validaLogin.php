@@ -14,10 +14,12 @@ $dao = $factory->getUsuarioDao();
 $usuario = $dao->buscaPorLogin($login);
 
 if ($usuario) {
-    if (password_verify($senha, $usuario->getSenha())) {
-        $_SESSION['usuario_nome'] = $usuario->getNome();
-        $_SESSION['usuario_id'] = $usuario->getId();
-        header("Location: home.php");
+    if ($usuario && password_verify($senha, $usuario->getSenha())) {
+        // credenciais OK
+        $_SESSION['usuario_id']    = $usuario->getId();
+        $_SESSION['usuario_nome']  = $usuario->getNome();
+        $_SESSION['usuario_tipo']  = $usuario->getTipo();   // ← adicione isto!
+        header("Location: index.php/home");
         exit;
     } else {
         
