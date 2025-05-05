@@ -4,10 +4,10 @@ include_once "fachada.php";
 $erro_login = $erro_nome = $erro_senha = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $login = isset($_POST["login"]) ? $_POST["login"] : null;
-    $nome = isset($_POST["nome"]) ? $_POST["nome"] : null;
-    $senha = isset($_POST["senha"]) ? $_POST["senha"] : null;
-    $id = isset($_POST["id"]) ? $_POST["id"] : null;
+    $login = $_POST["login"] ?? null;
+    $nome  = $_POST["nome"]  ?? null;
+    $senha = $_POST["senha"] ?? null;
+    $id    = $_POST["id"]    ?? null;
 
     $valido = true;
 
@@ -26,6 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $valido = false;
     }
 
+    // só busca o DAO depois das validações básicas
     if ($valido) {
         $dao = $factory->getUsuarioDao();
         $usuarioExistente = $dao->buscaPorLogin($login);
@@ -38,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($valido) {
         $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
+        $tipo       = 'cliente';  // <-- quinto parâmetro padrão
 
         if ($id) {
             $usuario = $dao->buscaPorId($id);
@@ -46,14 +48,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $usuario->setSenha($senha_hash);
             $dao->altera($usuario);
         } else {
-            $usuario = new Usuario(null, $login, $senha_hash, $nome);
+            // aqui passamos o 'tipo' como quinto argumento
+            $usuario = new Usuario(null, $login, $senha_hash, $nome, $tipo);
             $dao->insere($usuario);
         }
 
         header("Location: index.php");
         exit;
     } else {
-        header("Location: criarUsuario.php?erro_login=$erro_login&erro_nome=$erro_nome&erro_senha=$erro_senha");
+        // monta a query string de erros
+        $qs = http_build_query([
+            'erro_login' => $erro_login,
+            'erro_nome'  => $erro_nome,
+            'erro_senha' => $erro_senha
+        ]);
+        header("Location: criarUsuario.php?$qs");
         exit;
     }
 }

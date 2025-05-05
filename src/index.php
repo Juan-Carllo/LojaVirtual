@@ -10,25 +10,39 @@ error_reporting(E_ALL);
 
 // Captura da URL requisitada
 $request = $_SERVER['REQUEST_URI'];
-
-// Remove parâmetros da URL (como ?id=123)
 $request = parse_url($request, PHP_URL_PATH);
 
 // Roteamento manual
 switch ($request) {
     case '/':
-    case '/index.php':   // ✅ Suporte para /index.php
+    case '/index.php':
     case '/login':
         include 'pages/login.php';
         break;
 
-    case '/usuario':
-        include 'pages/usuario.php';
+    case '/registrar':
+        include 'pages/registrar.php';
+        break;
+
+    case '/salvaUsuario':
+        include 'salvaUsuario.php';
+        break;
+
+    case '/validaLogin':
+        include 'validaLogin.php';
+        break;
+
+    case '/logout':
+        include 'logout.php';
+        break;
+
+    case '/home':
+        include 'home.php';
         break;
 
     default:
         http_response_code(404);
-        echo "404 - Page not found";
+        echo "404 - Página não encontrada.";
         break;
 }
 ?>

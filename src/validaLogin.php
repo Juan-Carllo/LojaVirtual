@@ -15,7 +15,6 @@ $usuario = $dao->buscaPorLogin($login);
 
 if ($usuario) {
     if (password_verify($senha, $usuario->getSenha())) {
-        
         $_SESSION['usuario_nome'] = $usuario->getNome();
         $_SESSION['usuario_id'] = $usuario->getId();
         header("Location: home.php");

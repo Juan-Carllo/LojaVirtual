@@ -1,10 +1,8 @@
-
 <?php
-session_start();
-
+session_start(); // ✅ Sessão deve vir ANTES de tudo
 
 if (!isset($_SESSION['usuario_id'])) {
-    header("Location: ValidaLogin.php");
+    header("Location: validaLogin.php");
     exit;
 }
 
