@@ -7,11 +7,10 @@ if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
 }
 
 require_once __DIR__ . '/../fachada.php';
-require_once __DIR__ . '/header.php';
 
 $dao = $factory->getUsuarioDao();
 
-// Exclusão inline
+// ✅ MOVEMOS AQUI PARA CIMA ANTES DE QUALQUER OUTPUT
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $usuarioRem = $dao->buscaPorId((int)$_POST['delete_id']);
     if ($usuarioRem) {
@@ -21,26 +20,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     exit;
 }
 
+// ❌ NÃO PODE TER OUTPUT ANTES DE HEADER
+require_once __DIR__ . '/header.php';
+
 // Erros e dados para reabrir modal
 $error_login = $_GET['error_login'] ?? '';
 $error_nome  = $_GET['error_nome']  ?? '';
 $error_senha = $_GET['error_senha'] ?? '';
+
 $modalData = [
-    'id' => $_GET['id'] ?? '',
-    'login' => $_GET['login'] ?? '',
-    'nome' => $_GET['nome'] ?? '',
-    'tipo' => $_GET['tipo'] ?? 'cliente',
-    'rua' => $_GET['rua'] ?? '',
-    'numero' => $_GET['numero'] ?? '',
+    'id'          => $_GET['id'] ?? '',
+    'login'       => $_GET['login'] ?? '',
+    'nome'        => $_GET['nome'] ?? '',
+    'tipo'        => $_GET['tipo'] ?? 'cliente',
+    'rua'         => $_GET['rua'] ?? '',
+    'numero'      => $_GET['numero'] ?? '',
     'complemento' => $_GET['complemento'] ?? '',
-    'bairro' => $_GET['bairro'] ?? '',
-    'cep' => $_GET['cep'] ?? '',
-    'cidade' => $_GET['cidade'] ?? '',
-    'estado' => $_GET['estado'] ?? '',
+    'bairro'      => $_GET['bairro'] ?? '',
+    'cep'         => $_GET['cep'] ?? '',
+    'cidade'      => $_GET['cidade'] ?? '',
+    'estado'      => $_GET['estado'] ?? '',
 ];
 
 $q = trim($_GET['q'] ?? '');
 $usuarios = $dao->buscaTodos();
+
 if ($q !== '') {
     $usuarios = array_filter($usuarios, function($u) use ($q) {
         return stripos($u->getLogin(), $q) !== false || stripos($u->getNome(), $q) !== false;

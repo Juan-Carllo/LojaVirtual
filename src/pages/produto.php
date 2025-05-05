@@ -1,18 +1,18 @@
 <?php
 // pages/produto.php
 if (session_status() === PHP_SESSION_NONE) session_start();
+
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
     header("Location: /index.php/home");
     exit;
 }
 
 require_once __DIR__ . '/../fachada.php';
-require_once __DIR__ . '/header.php'; // dropdown incluído
 
 $produtoDao    = $factory->getProdutoDao();
 $fornecedorDao = $factory->getFornecedorDao();
 
-// POST
+// POST — processamento antes de qualquer HTML
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete_id'])) {
         $p = $produtoDao->buscaPorId((int) $_POST['delete_id']);
@@ -21,11 +21,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $id           = $_POST['id']           ?? null;
-    $nome         = trim($_POST['nome']         ?? '');
-    $preco        = trim($_POST['preco']        ?? '');
-    $quantidade   = trim($_POST['quantidade']   ?? '');
-    $fornecedorId = $_POST['fornecedorId']      ?? null;
+    $id           = $_POST['id'] ?? null;
+    $nome         = trim($_POST['nome'] ?? '');
+    $preco        = trim($_POST['preco'] ?? '');
+    $quantidade   = trim($_POST['quantidade'] ?? '');
+    $fornecedorId = $_POST['fornecedorId'] ?? null;
 
     $error_nome = $error_preco = $error_quantidade = $error_fornecedor = '';
 
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_nome = 'Nome é obrigatório.';
     }
     if (!is_numeric($preco) || $preco <= 0) {
-        $error_preco = 'Preço deve ser numérico e > 0.';
+        $error_preco = 'Preço deve ser numérico e maior que zero.';
     }
     if (!filter_var($quantidade, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
         $error_quantidade = 'Quantidade deve ser inteiro >= 0.';
@@ -75,22 +75,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// GET
+// GET — inicia após processamento de POST
+require_once __DIR__ . '/header.php';
+
 $error_nome       = $_GET['error_nome']       ?? '';
 $error_preco      = $_GET['error_preco']      ?? '';
 $error_quantidade = $_GET['error_quantidade'] ?? '';
 $error_fornecedor = $_GET['error_fornecedor'] ?? '';
 $modalData = [
-    'id' => $_GET['id'] ?? '',
-    'nome' => $_GET['nome'] ?? '',
-    'preco' => $_GET['preco'] ?? '',
-    'quantidade' => $_GET['quantidade'] ?? '',
+    'id'           => $_GET['id'] ?? '',
+    'nome'         => $_GET['nome'] ?? '',
+    'preco'        => $_GET['preco'] ?? '',
+    'quantidade'   => $_GET['quantidade'] ?? '',
     'fornecedorId' => $_GET['fornecedorId'] ?? ''
 ];
+
 $q = trim($_GET['q'] ?? '');
 $produtos     = $q !== '' ? $produtoDao->buscaPorNome($q) : $produtoDao->buscaTodos();
 $fornecedores = $fornecedorDao->buscaTodos();
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>

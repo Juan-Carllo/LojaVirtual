@@ -8,11 +8,10 @@ if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
 }
 
 require_once __DIR__ . '/../fachada.php';
-require_once __DIR__ . '/header.php';
 
 $dao = $factory->getFornecedorDao();
 
-// POST
+// POST — Antes de qualquer saída HTML
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete_id'])) {
         $rem = $dao->buscaPorId((int) $_POST['delete_id']);
@@ -62,7 +61,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-// GET
+// GET — Executado após POST, aqui sim carrega HTML e componentes
+require_once __DIR__ . '/header.php';
+
 $error_nome = $_GET['error_nome'] ?? '';
 $error_cnpj = $_GET['error_cnpj'] ?? '';
 $modalData = [
