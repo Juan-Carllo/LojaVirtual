@@ -1,5 +1,4 @@
 <?php
-// pages/usuario.php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
@@ -22,23 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     exit;
 }
 
-// Erros de validação
+// Erros e dados para reabrir modal
 $error_login = $_GET['error_login'] ?? '';
 $error_nome  = $_GET['error_nome']  ?? '';
 $error_senha = $_GET['error_senha'] ?? '';
-
 $modalData = [
-    'id'          => $_GET['id'] ?? '',
-    'login'       => $_GET['login'] ?? '',
-    'nome'        => $_GET['nome'] ?? '',
-    'tipo'        => $_GET['tipo'] ?? 'cliente',
-    'rua'         => $_GET['rua'] ?? '',
-    'numero'      => $_GET['numero'] ?? '',
+    'id' => $_GET['id'] ?? '',
+    'login' => $_GET['login'] ?? '',
+    'nome' => $_GET['nome'] ?? '',
+    'tipo' => $_GET['tipo'] ?? 'cliente',
+    'rua' => $_GET['rua'] ?? '',
+    'numero' => $_GET['numero'] ?? '',
     'complemento' => $_GET['complemento'] ?? '',
-    'bairro'      => $_GET['bairro'] ?? '',
-    'cep'         => $_GET['cep'] ?? '',
-    'cidade'      => $_GET['cidade'] ?? '',
-    'estado'      => $_GET['estado'] ?? ''
+    'bairro' => $_GET['bairro'] ?? '',
+    'cep' => $_GET['cep'] ?? '',
+    'cidade' => $_GET['cidade'] ?? '',
+    'estado' => $_GET['estado'] ?? '',
 ];
 
 $q = trim($_GET['q'] ?? '');
@@ -54,33 +52,24 @@ if ($q !== '') {
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Admin – Usuários</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-<?php require_once __DIR__ . '/header.php'; ?>
-
 <main class="flex-1 p-6">
     <h1 class="text-2xl font-bold mb-4">Usuários</h1>
 
-    <!-- Busca e Novo -->
     <div class="mb-4 flex items-center space-x-4">
         <form method="GET" action="/index.php/usuario" class="flex-1 flex">
-            <input name="q" type="text" placeholder="Pesquisar usuários..."
-                   value="<?= htmlspecialchars($q, ENT_QUOTES) ?>"
-                   class="flex-1 border px-4 py-2 rounded-l focus:ring-2 focus:ring-red-500" />
-            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-r hover:bg-red-700">
-                Buscar
-            </button>
+            <input name="q" type="text" placeholder="Pesquisar usuários..." value="<?= htmlspecialchars($q, ENT_QUOTES) ?>"
+                class="flex-1 border px-4 py-2 rounded-l focus:ring-2 focus:ring-red-500" />
+            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-r hover:bg-red-700">Buscar</button>
         </form>
-        <button id="btnNovo" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-            + Novo Usuário
-        </button>
+        <button id="btnNovo" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Novo Usuário</button>
     </div>
 
-    <!-- Tabela -->
     <table class="min-w-full bg-white rounded shadow">
         <thead>
             <tr class="bg-gray-200 text-left">
@@ -102,17 +91,16 @@ if ($q !== '') {
                         data-login="<?= htmlspecialchars($u->getLogin(), ENT_QUOTES) ?>"
                         data-nome="<?= htmlspecialchars($u->getNome(), ENT_QUOTES) ?>"
                         data-tipo="<?= $u->getTipo() ?>"
-                        data-rua="<?= htmlspecialchars($u->getEndereco()->getRua() ?? '', ENT_QUOTES) ?>"
-                        data-numero="<?= htmlspecialchars($u->getEndereco()->getNumero() ?? '', ENT_QUOTES) ?>"
-                        data-complemento="<?= htmlspecialchars($u->getEndereco()->getComplemento() ?? '', ENT_QUOTES) ?>"
-                        data-bairro="<?= htmlspecialchars($u->getEndereco()->getBairro() ?? '', ENT_QUOTES) ?>"
-                        data-cep="<?= htmlspecialchars($u->getEndereco()->getCep() ?? '', ENT_QUOTES) ?>"
-                        data-cidade="<?= htmlspecialchars($u->getEndereco()->getCidade() ?? '', ENT_QUOTES) ?>"
-                        data-estado="<?= htmlspecialchars($u->getEndereco()->getEstado() ?? '', ENT_QUOTES) ?>">
+                        data-rua="<?= htmlspecialchars($u->getEndereco()?->getRua() ?? '') ?>"
+                        data-numero="<?= htmlspecialchars($u->getEndereco()?->getNumero() ?? '') ?>"
+                        data-complemento="<?= htmlspecialchars($u->getEndereco()?->getComplemento() ?? '') ?>"
+                        data-bairro="<?= htmlspecialchars($u->getEndereco()?->getBairro() ?? '') ?>"
+                        data-cep="<?= htmlspecialchars($u->getEndereco()?->getCep() ?? '') ?>"
+                        data-cidade="<?= htmlspecialchars($u->getEndereco()?->getCidade() ?? '') ?>"
+                        data-estado="<?= htmlspecialchars($u->getEndereco()?->getEstado() ?? '') ?>">
                         Editar
                     </button>
-                    <form method="post" action="/index.php/usuario" class="inline"
-                          onsubmit="return confirm('Confirma a exclusão deste usuário?');">
+                    <form method="post" action="/index.php/usuario" class="inline" onsubmit="return confirm('Confirma a exclusão?');">
                         <input type="hidden" name="delete_id" value="<?= $u->getId() ?>">
                         <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Excluir</button>
                     </form>
@@ -151,8 +139,8 @@ if ($q !== '') {
 
                 <label class="block mb-1 text-sm">Tipo</label>
                 <select name="tipo" id="tipo" class="w-full border px-3 py-2 rounded mb-4">
-                    <option value="cliente" <?= $modalData['tipo']==='cliente'?'selected':'' ?>>Cliente</option>
-                    <option value="admin" <?= $modalData['tipo']==='admin'?'selected':'' ?>>Administrador</option>
+                    <option value="cliente" <?= $modalData['tipo'] === 'cliente' ? 'selected' : '' ?>>Cliente</option>
+                    <option value="admin" <?= $modalData['tipo'] === 'admin' ? 'selected' : '' ?>>Administrador</option>
                 </select>
 
                 <?php foreach (['rua','numero','complemento','bairro','cep','cidade','estado'] as $field): ?>
@@ -171,7 +159,6 @@ if ($q !== '') {
     </div>
 </main>
 
-<!-- JS Modal -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('userModal');
@@ -205,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     editBtns.forEach(btn => btn.addEventListener('click', () => {
         const data = {};
-        fields.forEach(f => data[f] = btn.dataset[f] || (f==='userId'? btn.dataset.id : ''));
+        fields.forEach(f => data[f] = btn.dataset[f] || (f === 'userId' ? btn.dataset.id : ''));
         open(true, data);
     }));
 
