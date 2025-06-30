@@ -1,70 +1,72 @@
 <?php
-// se não tiver seção, inicia nova
+// header.php
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-$usuario_nome = $_SESSION['usuario_nome'] ?? 'Usuário';
-$_SESSION['usuario_tipo'] = $_SESSION['usuario_tipo'] ?? 'cliente';
+$usuario_nome   = $_SESSION['usuario_nome'] ?? 'Usuário';
+$usuario_tipo   = $_SESSION['usuario_tipo'] ?? 'cliente';
+$carrinho_count = count($_SESSION['carrinho'] ?? []);
+$q              = htmlspecialchars($_GET['q'] ?? '', ENT_QUOTES);
 ?>
+<header class="bg-white shadow p-4 flex items-center justify-between sticky top-0 z-50">
+  <!-- Logo + nome clicáveis -->
+  <a href="/index.php/home" class="flex items-center space-x-4">
+    <img src="/assets/Amigos_do_Casa_logo.png" alt="Logo" class="h-10 w-auto" />
+    <span class="text-2xl font-bold text-gray-800">Amigos do Casa</span>
+  </a>
 
-<header class="bg-white shadow p-4 flex items-center justify-between">
-    <div class="flex items-center flex-1 space-x-4">
-        <img src="/assets/Amigos_do_Casa_logo.png" alt="Logo" class="h-12 w-auto" />
-        <form method="GET" action="/index.php/home" class="flex flex-1">
-            <input name="q" type="text" placeholder="Buscar produtos..."
-                value="<?= htmlspecialchars($_GET['q'] ?? '', ENT_QUOTES) ?>"
-                class="flex-1 border border-gray-300 rounded-l-full px-4 py-2 focus:ring-2 focus:ring-red-500" />
-            <button type="submit" class="bg-red-600 text-white px-4 rounded-r-full">🔍</button>
-        </form>
-    </div>
+  <!-- Navegação + Busca -->
+  <div class="flex-1 mx-8 flex items-center space-x-8">
+    <nav class="space-x-6">
+      <?php if ($usuario_tipo === 'admin'): ?>
+        <a href="/index.php/produto"     class="text-gray-700 hover:text-red-600">Produtos</a>
+        <a href="/index.php/fornecedor"   class="text-gray-700 hover:text-red-600">Fornecedores</a>
+        <a href="/index.php/usuario"      class="text-gray-700 hover:text-red-600">Usuários</a>
+        <a href="/index.php/estoque"      class="text-gray-700 hover:text-red-600">Estoque</a>
+      <?php else: ?>
+        <a href="/index.php/produto"     class="text-gray-700 hover:text-red-600">Produtos</a>
+      <?php endif; ?>
+      <!-- Link de Pedidos para todos -->
+      <a href="/index.php/pedidos"       class="text-gray-700 hover:text-red-600">Pedidos</a>
+    </nav>
 
-    <div class="flex items-center space-x-6">
-        <a href="/index.php/carrinho" class="relative text-gray-700 hover:text-red-600">
-            🛒
-            <span class="absolute -top-1 -right-2 bg-red-600 text-white text-xs rounded-full px-1">
-                <?= count($_SESSION['carrinho'] ?? []) ?>
-            </span>
-        </a>
-        <?php if ($_SESSION['usuario_tipo'] === 'admin'): ?>
-        <div class="relative inline-block text-left" id="dropdown-wrapper">
-            <button id="dropdown-btn" type="button"
-                class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded">
-                Olá, <?= htmlspecialchars($usuario_nome) ?> <span class="ml-1">▾</span>
-            </button>
-            <ul id="dropdown-menu"
-                class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                <li><a href="/index.php/home" class="block px-4 py-2 hover:bg-gray-100">← Voltar para Home</a></li>
-                <li><hr class="my-1 border-gray-200" /></li>
-                <li><a href="/index.php/usuario" class="block px-4 py-2 hover:bg-gray-100">Usuários</a></li>
-                <li><a href="/index.php/fornecedor" class="block px-4 py-2 hover:bg-gray-100">Fornecedores</a></li>
-                <li><a href="/index.php/produto" class="block px-4 py-2 hover:bg-gray-100">Produtos</a></li>
-                <li><a href="/index.php/estoque" class="block px-4 py-2 hover:bg-gray-100">Estoque</a></li>
-                <li><hr class="my-1 border-gray-200" /></li>
-                <li><a href="/../logout.php" class="block px-4 py-2 hover:bg-gray-100 text-red-600">Logout</a></li>
-            </ul>
-        </div>
-        <?php else: ?>
-        <span class="text-sm">
-            Olá, <?= htmlspecialchars($usuario_nome) ?> |
-            <a href="/../logout.php" class="text-red-600 hover:underline">Logout</a>
-        </span>
-        <?php endif; ?>
-    </div>
+    <form method="GET" action="/index.php/home" class="relative w-full max-w-md">
+      <input
+        name="q"
+        value="<?= $q ?>"
+        type="text"
+        placeholder="Pesquisar produtos…"
+        class="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-red-600"
+      />
+      <button
+        type="submit"
+        class="absolute right-1 top-1/2 transform -translate-y-1/2 bg-red-600 hover:bg-red-700 p-2 rounded-full"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="h-5 w-5 text-white"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 1111.5 4.5a7.5 7.5 0 015.15 12.15z"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Carrinho + Logout -->
+  <div class="flex items-center space-x-6">
+    <button id="toggleCart" class="relative text-gray-700 hover:text-red-600">
+      <svg xmlns="http://www.w3.org/2000/svg"
+           class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m5-9v9m4-9v9m5-9l2 9"/>
+      </svg>
+      <span id="cartCount"
+            class="absolute -top-1 -right-2 bg-red-600 text-white text-xs rounded-full px-1">
+        <?= $carrinho_count ?>
+      </span>
+    </button>
+
+    <span class="text-gray-700"><?= htmlspecialchars($usuario_nome) ?></span>
+    <a href="/index.php/logout" class="text-red-600 hover:underline">Logout</a>
+  </div>
 </header>
-
-<script>
-// javascript do dropdown de ações
-document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.getElementById('dropdown-btn');
-    const menu = document.getElementById('dropdown-menu');
-    btn?.addEventListener('click', e => {
-        e.stopPropagation();
-        menu.classList.toggle('hidden');
-    });
-    document.addEventListener('click', e => {
-        if (!btn?.contains(e.target) && !menu?.contains(e.target)) {
-            menu?.classList.add('hidden');
-        }
-    });
-});
-</script>

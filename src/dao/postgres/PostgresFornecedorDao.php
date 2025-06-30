@@ -1,9 +1,14 @@
 <?php
 // dao/postgres/PostgresFornecedorDao.php
 
-include_once '/var/www/html/dao/DAO.php';
-include_once '/var/www/html/dao/FornecedorDao.php';
+// 1) classe base DAO
+require_once __DIR__ . '/../DAO.php';
 
+// 2) interface que ele implementa
+require_once __DIR__ . '/../FornecedorDao.php';
+
+// 3) modelo de domínio
+require_once __DIR__ . '/../../model/Fornecedor.php';
 class PostgresFornecedorDao extends DAO implements FornecedorDao {
 
     /**

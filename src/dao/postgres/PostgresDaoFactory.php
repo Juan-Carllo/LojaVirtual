@@ -1,43 +1,56 @@
 <?php
+// src/dao/postgres/PostgresDaoFactory.php
 
-include_once('PostgresUsuarioDao.php');
-include_once('PostgresFornecedorDao.php');
-include_once('PostgresProdutoDao.php');
-include_once('PostgresUsuarioDao.php');
+// preciso da definição de DaoFactory
+require_once __DIR__ . '/../DaoFactory.php';
 
-class PostgresDaoFactory extends DaoFactory {
+require_once __DIR__ . '/PostgresUsuarioDao.php';
+require_once __DIR__ . '/PostgresFornecedorDao.php';
+require_once __DIR__ . '/PostgresProdutoDao.php';
+require_once __DIR__ . '/PostgresPedidoDao.php';
+require_once __DIR__ . '/PostgresItemPedidoDao.php';
 
-    private $host = "postgres-db";         // Nome do serviço no docker-compose
-    private $db_name = "lojavirtual";      // Nome do banco de dados
-    private $port = "5432";                // Porta padrão do PostgreSQL
-    private $username = "amigosdocasa";         // Usuário definido no docker-compose
-    private $password = "senhasuperdificil";        // Senha definida no docker-compose
-    private $conn;
+class PostgresDaoFactory extends DaoFactory
+{
+    private string $host     = 'postgres-db';
+    private string $db_name  = 'lojavirtual';
+    private string $port     = '5432';
+    private string $username = 'amigosdocasa';
+    private string $password = 'senhasuperdificil';
+    private ?PDO   $conn     = null;
 
-    // Estabelece conexão com o banco de dados
-    public function getConnection() {
-        $this->conn = null;
-
-        try {
+    public function getConnection(): PDO
+    {
+        if ($this->conn === null) {
             $dsn = "pgsql:host={$this->host};port={$this->port};dbname={$this->db_name}";
             $this->conn = new PDO($dsn, $this->username, $this->password);
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $exception) {
-            echo "Connection error: " . $exception->getMessage();
         }
-
         return $this->conn;
     }
 
-    public function getUsuarioDao() {
+    public function getUsuarioDao(): UsuarioDao
+    {
         return new PostgresUsuarioDao($this->getConnection());
     }
 
-    public function getFornecedorDao() {
+    public function getFornecedorDao(): FornecedorDao
+    {
         return new PostgresFornecedorDao($this->getConnection());
     }
 
-    public function getProdutoDao() {
+    public function getProdutoDao(): ProdutoDao
+    {
         return new PostgresProdutoDao($this->getConnection());
+    }
+
+    public function getPedidoDao(): PedidoDao
+    {
+        return new PostgresPedidoDao($this->getConnection());
+    }
+
+    public function getItemPedidoDao(): ItemPedidoDao
+    {
+        return new PostgresItemPedidoDao($this->getConnection());
     }
 }

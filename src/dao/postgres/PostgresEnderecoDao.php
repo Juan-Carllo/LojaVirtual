@@ -1,12 +1,6 @@
 <?php
 // dao/postgres/PostgresEnderecoDao.php
 
-// Carrega a classe base DAO e a interface EnderecoDao
-require_once '/var/www/html/dao/DAO.php';
-require_once '/var/www/html/dao/EnderecoDao.php';
-// Carrega o modelo Endereco
-require_once __DIR__ . '/../../model/Endereco.php';
-
 class PostgresEnderecoDao extends DAO implements EnderecoDao {
 
     /**

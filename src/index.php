@@ -69,6 +69,26 @@ switch ($request) {
         include __DIR__ . '/pages/estoque.php';
         break;
 
+    case '/finalizarPedido':
+    case '/index.php/finalizarPedido':
+        include __DIR__ . '/pages/finalizarPedido.php';
+        break;
+
+    case '/pedidos':
+    case '/index.php/pedidos':
+    include __DIR__ . '/pages/pedidos.php';
+    break;
+
+    case '/pedido_detalhe':
+    case '/index.php/pedido_detalhe':
+        include __DIR__ . '/pages/pedido_detalhe.php';
+        break;
+
+    case '/alterarSituacao':
+    case '/index.php/alterarSituacao':
+    include __DIR__ . '/pages/alterarSituacao.php';
+    break;
+
     // autenticação / ações
     case '/validaLogin':
     case '/index.php/validaLogin':
@@ -84,6 +104,8 @@ switch ($request) {
     case '/index.php/logout':
         include __DIR__ . '/logout.php';
         break;
+    
+  
 
     // 404
     default:

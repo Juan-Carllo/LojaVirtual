@@ -1,11 +1,9 @@
 <?php
 
-//TODO ADICIONAR METODOS PRA IMAGEM, E INSERÇÃO NO FORM
 
-require_once '/var/www/html/dao/DAO.php';
-require_once '/var/www/html/dao/ProdutoDao.php';
-require_once '/var/www/html/model/Produto.php';
-
+require_once __DIR__ . '/../DAO.php';
+require_once __DIR__ . '/../ProdutoDao.php';
+require_once __DIR__ . '/../../model/Produto.php';
 class PostgresProdutoDao extends DAO implements ProdutoDao {
 
     /**

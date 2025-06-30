@@ -1,11 +1,14 @@
 <?php
 // src/dao/postgres/PostgresUsuarioDao.php
 
-require_once '/var/www/html/dao/DAO.php';
-require_once '/var/www/html/dao/UsuarioDao.php';
-require_once '/var/www/html/model/Usuario.php';
-require_once '/var/www/html/model/Endereco.php';
+require_once __DIR__ . '/../DAO.php';
 
+// 2) interface que implementa
+require_once __DIR__ . '/../UsuarioDao.php';
+
+// 3) modelos de domínio
+require_once __DIR__ . '/../../model/Usuario.php';
+require_once __DIR__ . '/../../model/Endereco.php';
 class PostgresUsuarioDao extends DAO implements UsuarioDao
 {
     /**

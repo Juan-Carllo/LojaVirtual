@@ -1,24 +1,24 @@
 <?php
+// src/dao/ProdutoDao.php
+
 interface ProdutoDao {
-    public function insere(Produto $produto);
-    public function remove(Produto $produto);
-    public function altera(Produto $produto);
+    public function insere(Produto $produto): int;
+    public function remove(Produto $produto): bool;
+    public function altera(Produto $produto): bool;
     public function buscaPorId(int $id): ?Produto;
     public function buscaPorNome(string $nome): array;
     public function buscaTodos(): array;
 
-    // PAGINAÇÃO
-    /**
-     * Retorna uma “página” de produtos.
-     * @param int $limit  — quantos itens por página
-     * @param int $offset — quantos itens pular
-     * @return Produto[]
-     */
+    // já existentes para paginação, se você os tiver implementado:
     public function buscaPagina(int $limit, int $offset): array;
+    public function contaTodos(): int;
 
     /**
-     * Conta o total de produtos (para calcular número de páginas).
-     * @return int
+     * Atualiza a quantidade do produto pelo ID.
+     *
+     * @param int $id
+     * @param int $quantidade
+     * @return bool
      */
-    public function contaTodos(): int;
+    public function atualizarQuantidade(int $id, int $quantidade): bool;
 }
