@@ -22,6 +22,9 @@ $produtos     = $q !== ''
     ? $produtoDao->buscaPorNome($q)
     : $produtoDao->buscaTodos();
 $fornecedores = $fornecedorDao->buscaTodos();
+
+
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">

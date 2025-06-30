@@ -1,11 +1,23 @@
 <?php
 interface FornecedorDao {
+    public function insere(Fornecedor $fornecedor);
+    public function remove(Fornecedor $fornecedor);
+    public function altera(Fornecedor $fornecedor);
+    public function buscaPorId(int $id): ?Fornecedor;
+    public function buscaTodos(): array;
 
-    public function insere($fornecedor);
-    public function remove($fornecedor);
-    public function altera($fornecedor);
-    public function buscaPorId($id);
-    public function buscaPorNome($nome);
-    public function buscaTodos();
+    // PAGINAÇÃO
+    /**
+     * Retorna uma “página” de fornecedores.
+     * @param int $limit
+     * @param int $offset
+     * @return Fornecedor[]
+     */
+    public function buscaPagina(int $limit, int $offset): array;
+
+    /**
+     * Conta o total de fornecedores.
+     * @return int
+     */
+    public function contaTodos(): int;
 }
-?>
