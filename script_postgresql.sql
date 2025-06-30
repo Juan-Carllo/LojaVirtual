@@ -37,6 +37,7 @@ CREATE TABLE produto (
     preco NUMERIC(10,2) NOT NULL,
     quantidade INTEGER NOT NULL,
     fornecedor_id INTEGER,
+    imagem BYTEA DEFAULT NULL,
     CONSTRAINT fk_fornecedores FOREIGN KEY (fornecedor_id)
         REFERENCES fornecedores(id)
         ON DELETE SET NULL

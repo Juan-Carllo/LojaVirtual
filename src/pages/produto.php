@@ -1,254 +1,237 @@
 <?php
 // pages/produto.php
-
-// se não tiver seção, inicia uma 
 if (session_status() === PHP_SESSION_NONE) session_start();
-
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
-    header("Location: /index.php/home");
-    exit;
+    header("Location: /index.php/home"); exit;
 }
-
 require_once __DIR__ . '/../fachada.php';
-
+require_once __DIR__ . '/header.php'; 
 $produtoDao    = $factory->getProdutoDao();
 $fornecedorDao = $factory->getFornecedorDao();
 
-// POST — processamento antes de qualquer HTML
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['delete_id'])) {
-        $p = $produtoDao->buscaPorId((int) $_POST['delete_id']);
-        if ($p) $produtoDao->remove($p);
-        header('Location: /index.php/produto');
-        exit;
-    }
-
-    $id           = $_POST['id'] ?? null;
-    $nome         = trim($_POST['nome'] ?? '');
-    $preco        = trim($_POST['preco'] ?? '');
-    $quantidade   = trim($_POST['quantidade'] ?? '');
-    $fornecedorId = $_POST['fornecedorId'] ?? null;
-
-    $error_nome = $error_preco = $error_quantidade = $error_fornecedor = '';
-
-    if (empty($nome)) {
-        $error_nome = 'Nome é obrigatório.';
-    }
-    if (!is_numeric($preco) || $preco <= 0) {
-        $error_preco = 'Preço deve ser numérico e maior que zero.';
-    }
-    if (!filter_var($quantidade, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])) {
-        $error_quantidade = 'Quantidade deve ser inteiro >= 0.';
-    }
-    if (empty($fornecedorId) || !$fornecedorDao->buscaPorId((int)$fornecedorId)) {
-        $error_fornecedor = 'Fornecedor inválido.';
-    }
-
-    if ($error_nome || $error_preco || $error_quantidade || $error_fornecedor) {
-        $qs = http_build_query([
-            'error_nome' => $error_nome,
-            'error_preco' => $error_preco,
-            'error_quantidade' => $error_quantidade,
-            'error_fornecedor' => $error_fornecedor,
-            'id' => $id,
-            'nome' => $nome,
-            'preco' => $preco,
-            'quantidade' => $quantidade,
-            'fornecedorId' => $fornecedorId,
-            'q' => $_GET['q'] ?? ''
-        ]);
-        header("Location: /index.php/produto?$qs");
-        exit;
-    }
-
-    $produto = $id ? $produtoDao->buscaPorId((int)$id) : new Produto();
-    if (!$produto) {
-        header('Location: /index.php/produto');
-        exit;
-    }
-
-    $produto->setNome($nome);
-    $produto->setPreco((float)$preco);
-    $produto->setQuantidade((int)$quantidade);
-    $produto->setFornecedorId((int)$fornecedorId);
-
-    $id ? $produtoDao->altera($produto) : $produtoDao->insere($produto);
-    header('Location: /index.php/produto');
-    exit;
+// Exclusão via POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $p = $produtoDao->buscaPorId((int)$_POST['delete_id']);
+    if ($p) $produtoDao->remove($p);
+    header('Location: /index.php/produto'); exit;
 }
 
-// GET — inicia após processamento de POST
-require_once __DIR__ . '/header.php';
-
-$error_nome       = $_GET['error_nome']       ?? '';
-$error_preco      = $_GET['error_preco']      ?? '';
-$error_quantidade = $_GET['error_quantidade'] ?? '';
-$error_fornecedor = $_GET['error_fornecedor'] ?? '';
-$modalData = [
-    'id'           => $_GET['id'] ?? '',
-    'nome'         => $_GET['nome'] ?? '',
-    'preco'        => $_GET['preco'] ?? '',
-    'quantidade'   => $_GET['quantidade'] ?? '',
-    'fornecedorId' => $_GET['fornecedorId'] ?? ''
-];
-
+// Busca e listagem
 $q = trim($_GET['q'] ?? '');
-$produtos     = $q !== '' ? $produtoDao->buscaPorNome($q) : $produtoDao->buscaTodos();
+$produtos     = $q !== ''
+    ? $produtoDao->buscaPorNome($q)
+    : $produtoDao->buscaTodos();
 $fornecedores = $fornecedorDao->buscaTodos();
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Admin – Produtos</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin – Produtos</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
-
 <main class="flex-1 p-6">
-    <h1 class="text-2xl font-bold mb-4">Produtos</h1>
+  <h1 class="text-2xl font-bold mb-4">Produtos</h1>
 
-    <div class="mb-4 flex items-center space-x-4">
-        <form method="GET" action="/index.php/produto" class="flex-1 flex">
-            <input name="q" type="text" placeholder="Pesquisar produtos…" value="<?= htmlspecialchars($q, ENT_QUOTES) ?>" class="flex-1 border px-4 py-2 rounded-l focus:ring-2 focus:ring-red-500" />
-            <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-r hover:bg-red-700">Buscar</button>
-        </form>
-        <button id="btnNovo" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Novo Produto</button>
-    </div>
+  <div class="mb-4 flex items-center space-x-4">
+    <form method="GET" action="/index.php/produto" class="flex-1 flex">
+      <input name="q" type="text" placeholder="Pesquisar produtos…" value="<?=htmlspecialchars($q, ENT_QUOTES)?>"
+        class="flex-1 border px-4 py-2 rounded-l focus:ring-2 focus:ring-red-500" />
+      <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-r hover:bg-red-700">Buscar</button>
+    </form>
+    <button id="btnNovo" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">+ Novo Produto</button>
+  </div>
 
-    <table class="min-w-full bg-white rounded shadow">
-        <thead>
-            <tr class="bg-gray-200 text-left">
-                <th class="px-4 py-2">Nome</th>
-                <th class="px-4 py-2">Preço</th>
-                <th class="px-4 py-2">Qtd</th>
-                <th class="px-4 py-2">Fornecedor</th>
-                <th class="px-4 py-2">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php foreach ($produtos as $p): ?>
-            <?php $fn = $fornecedorDao->buscaPorId($p->getFornecedorId()); ?>
-            <tr class="border-t">
-                <td class="px-4 py-2"><?= htmlspecialchars($p->getNome(), ENT_QUOTES) ?></td>
-                <td class="px-4 py-2">R$ <?= number_format((float)$p->getPreco(), 2, ',', '.') ?></td>
-                <td class="px-4 py-2"><?= $p->getQuantidade() ?></td>
-                <td class="px-4 py-2"><?= htmlspecialchars($fn ? $fn->getNome() : '', ENT_QUOTES) ?></td>
-                <td class="px-4 py-2 space-x-2">
-                    <button class="editarBtn bg-indigo-500 text-white px-2 py-1 rounded"
-                        data-id="<?= $p->getId() ?>"
-                        data-nome="<?= htmlspecialchars($p->getNome(), ENT_QUOTES) ?>"
-                        data-preco="<?= $p->getPreco() ?>"
-                        data-quantidade="<?= $p->getQuantidade() ?>"
-                        data-fornecedor-id="<?= $p->getFornecedorId() ?>">Editar</button>
+  <div id="msg" class="mb-4 text-center text-green-600"></div>
 
-                    <form method="post" action="/index.php/produto" class="inline" onsubmit="return confirm('Confirma exclusão?');">
-                        <input type="hidden" name="delete_id" value="<?= $p->getId() ?>">
-                        <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Excluir</button>
-                    </form>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
+  <table class="min-w-full bg-white rounded shadow">
+    <thead>
+      <tr class="bg-gray-200 text-left">
+        <th class="px-4 py-2">Imagem</th>
+        <th class="px-4 py-2">Nome</th>
+        <th class="px-4 py-2">Preço</th>
+        <th class="px-4 py-2">Qtd</th>
+        <th class="px-4 py-2">Fornecedor</th>
+        <th class="px-4 py-2">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+    <?php foreach ($produtos as $p): ?>
+      <?php $fn = $fornecedorDao->buscaPorId($p->getFornecedorId()); ?>
+      <tr class="border-t">
+        <td class="px-4 py-2">
+          <?php if ($p->getImagem()): ?>
+            <img src="data:image/jpeg;base64,<?=base64_encode($p->getImagem())?>" width="60" class="rounded">
+          <?php else: ?>—<?php endif; ?>
+        </td>
+        <td class="px-4 py-2"><?=htmlspecialchars($p->getNome(),ENT_QUOTES)?></td>
+        <td class="px-4 py-2">R$ <?=number_format($p->getPreco(),2,',','.')?></td>
+        <td class="px-4 py-2"><?=$p->getQuantidade()?></td>
+        <td class="px-4 py-2"><?=htmlspecialchars($fn ? $fn->getNome() : '',ENT_QUOTES)?></td>
+        <td class="px-4 py-2 space-x-2">
+          <button class="editarBtn bg-indigo-500 text-white px-2 py-1 rounded hover:bg-indigo-600"
+              data-id="<?=$p->getId()?>"
+              data-nome="<?=htmlspecialchars($p->getNome(),ENT_QUOTES)?>"
+              data-preco="<?=$p->getPreco()?>"
+              data-quantidade="<?=$p->getQuantidade()?>"
+              data-fornecedor-id="<?=$p->getFornecedorId()?>">
+            Editar
+          </button>
+          <form method="post" action="/index.php/produto" class="inline" onsubmit="return confirm('Confirma exclusão?');">
+            <input type="hidden" name="delete_id" value="<?=$p->getId()?>">
+            <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Excluir</button>
+          </form>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+    </tbody>
+  </table>
 
-    <!-- Modal -->
-    <div id="prodModal" class="fixed inset-0 flex items-center justify-center hidden">
-        <div id="modalOverlay" class="absolute inset-0 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded shadow-lg p-6 z-10 w-full max-w-lg">
-            <div class="flex justify-between mb-4">
-                <h2 id="modalTitle" class="text-xl font-semibold">Novo Produto</h2>
-                <button id="closeModal" class="text-gray-500 hover:text-gray-700">✕</button>
-            </div>
+  <!-- Modal -->
+  <div id="prodModal" class="fixed inset-0 flex items-center justify-center hidden">
+    <div id="modalOverlay" class="absolute inset-0 bg-black opacity-50"></div>
+    <div class="relative bg-white rounded shadow-lg p-6 z-10 w-full max-w-lg">
 
-            <form id="prodForm" method="post" action="/index.php/produto">
-                <input type="hidden" name="id" id="prodId" value="<?= htmlspecialchars($modalData['id'], ENT_QUOTES) ?>">
-                <label class="block mb-1 text-sm">Nome</label>
-                <input name="nome" id="prodNome" required value="<?= htmlspecialchars($modalData['nome'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500">
-                <?php if ($error_nome): ?><p class="text-red-600 text-sm mb-2"><?= $error_nome ?></p><?php endif; ?>
+      <div class="flex justify-between mb-4">
+        <h2 id="modalTitle" class="text-xl font-semibold">Novo Produto</h2>
+        <button id="closeModal" class="text-gray-500 hover:text-gray-700">✕</button>
+      </div>
 
-                <label class="block mb-1 text-sm">Preço</label>
-                <input name="preco" id="prodPreco" required value="<?= htmlspecialchars($modalData['preco'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500">
-                <?php if ($error_preco): ?><p class="text-red-600 text-sm mb-2"><?= $error_preco ?></p><?php endif; ?>
+      <form id="uploadForm" method="post" action="/ajax/produto_upload_ajax.php" enctype="multipart/form-data" class="space-y-4">
+        <input type="hidden" name="id" id="prodId">
 
-                <label class="block mb-1 text-sm">Quantidade</label>
-                <input name="quantidade" id="prodQtd" required value="<?= htmlspecialchars($modalData['quantidade'], ENT_QUOTES) ?>" class="w-full border px-3 py-2 rounded mb-2 focus:ring-2 focus:ring-red-500">
-                <?php if ($error_quantidade): ?><p class="text-red-600 text-sm mb-2"><?= $error_quantidade ?></p><?php endif; ?>
-
-                <label class="block mb-1 text-sm">Fornecedor</label>
-                <select name="fornecedorId" id="prodFornecedorId" required class="w-full border px-3 py-2 rounded mb-4 focus:ring-2 focus:ring-red-500">
-                    <option value="">Selecione...</option>
-                    <?php foreach ($fornecedores as $f): ?>
-                        <option value="<?= $f->getId() ?>" <?= $modalData['fornecedorId'] == $f->getId() ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($f->getNome(), ENT_QUOTES) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <?php if ($error_fornecedor): ?><p class="text-red-600 text-sm mb-2"><?= $error_fornecedor ?></p><?php endif; ?>
-
-                <div class="flex justify-end space-x-2">
-                    <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar</button>
-                </div>
-            </form>
+        <div>
+          <label class="block text-sm">Nome</label>
+          <input type="text" name="nome" id="prodNome" required class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-500">
         </div>
+
+        <div>
+          <label class="block text-sm">Preço</label>
+          <input type="text" name="preco" id="prodPreco" required class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-500">
+        </div>
+
+        <div>
+          <label class="block text-sm">Quantidade</label>
+          <input type="number" name="quantidade" id="prodQtd" min="0" required class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-500">
+        </div>
+
+        <div>
+          <label class="block text-sm">Fornecedor</label>
+          <select name="fornecedorId" id="prodFornecedorId" required class="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-500">
+            <option value="">Selecione...</option>
+            <?php foreach ($fornecedores as $f): ?>
+              <option value="<?=$f->getId()?>" <?=isset($modalData['fornecedorId']) && $modalData['fornecedorId']==$f->getId()?'selected':''?>>
+                <?=htmlspecialchars($f->getNome(),ENT_QUOTES)?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm">Imagem Atual</label>
+          <div id="currentImage" class="mb-2"></div>
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="remover_imagem" id="removerImagem" class="mr-2">
+            Remover imagem
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-sm">Imagem do Produto</label>
+          <input type="file" name="imagem" id="prodImagem" accept="image/*" class="w-full border p-2 rounded">
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-4">
+          <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Salvar</button>
+        </div>
+      </form>
     </div>
+  </div>
 </main>
 
 <script>
-// javascript do modal de inserção e edição
-document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('prodModal');
-    const overlay = document.getElementById('modalOverlay');
-    const btnNovo = document.getElementById('btnNovo');
-    const closeBtn = document.getElementById('closeModal');
-    const cancelBtn = document.getElementById('cancelBtn');
-    const editBtns = document.querySelectorAll('.editarBtn');
-    const title = document.getElementById('modalTitle');
-    const form = document.getElementById('prodForm');
-    const fields = {
-        prodId: document.getElementById('prodId'),
-        prodNome: document.getElementById('prodNome'),
-        prodPreco: document.getElementById('prodPreco'),
-        prodQtd: document.getElementById('prodQtd'),
-        prodFornecedorId: document.getElementById('prodFornecedorId'),
+$(function() {
+  const modal   = $('#prodModal');
+  const overlay = $('#modalOverlay');
+  const form    = $('#uploadForm');
+  const msg     = $('#msg');
+
+  // Preview de imagem no file input
+  $('#prodImagem').on('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      $('#currentImage').html(`<img src="${e.target.result}" width="100" class="rounded">`);
     };
+    reader.readAsDataURL(file);
+  });
 
-    function openModal(edit, data) {
-        title.textContent = edit ? 'Editar Produto' : 'Novo Produto';
-        form.reset();
-        fields.prodId.value = data.id || '';
-        fields.prodNome.value = data.nome || '';
-        fields.prodPreco.value = data.preco || '';
-        fields.prodQtd.value = data.quantidade || '';
-        fields.prodFornecedorId.value = data.fornecedorId || '';
-        modal.classList.remove('hidden');
+  function openModal(edit, data) {
+    $('#modalTitle').text(edit ? 'Editar Produto' : 'Novo Produto');
+    form[0].reset(); msg.text('');
+    $('#prodId').val(data.id || '');
+    $('#prodNome').val(data.nome || '');
+    $('#prodPreco').val(data.preco || '');
+    $('#prodQtd').val(data.quantidade || '');
+    $('#prodFornecedorId').val(data.fornecedorId || '');
+    if (edit && data.imagem) {
+      $('#currentImage').html(`<img src="${data.imagem}" width="100" class="rounded">`);
+      $('#removerImagem').prop('checked', false);
+    } else {
+      $('#currentImage').empty();
     }
+    modal.removeClass('hidden');
+  }
 
-    function closeModal() { modal.classList.add('hidden'); }
+  function closeModal() {
+    modal.addClass('hidden');
+  }
 
-    btnNovo.addEventListener('click', () => openModal(false, {}));
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    overlay.addEventListener('click', closeModal);
+  // Novo produto
+  $('#btnNovo').on('click', () => openModal(false, {}));
 
-    editBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            openModal(true, {
-                id: btn.dataset.id,
-                nome: btn.dataset.nome,
-                preco: btn.dataset.preco,
-                quantidade: btn.dataset.quantidade,
-                fornecedorId: btn.dataset.fornecedorId,
-            });
-        });
+  // Fechar modal
+  $('#closeModal, #cancelBtn').on('click', closeModal);
+  overlay.on('click', closeModal);
+
+  // Editar produto
+  $('.editarBtn').on('click', function() {
+    const btn = $(this);
+    const row = btn.closest('tr');
+    openModal(true, {
+      id:            btn.data('id'),
+      nome:          btn.data('nome'),
+      preco:         btn.data('preco'),
+      quantidade:    btn.data('quantidade'),
+      fornecedorId:  btn.data('fornecedor-id'),
+      imagem:        row.find('td').eq(0).find('img').attr('src') || ''
     });
+  });
 
-    <?php if ($error_nome || $error_preco || $error_quantidade || $error_fornecedor): ?>
-    openModal(true, <?= json_encode($modalData) ?>);
-    <?php endif; ?>
+  // Envio AJAX
+  form.on('submit', function(e) {
+    e.preventDefault();
+    msg.text('Salvando...');
+    $.ajax({
+      url: form.attr('action'),
+      type: 'POST',
+      data: new FormData(this),
+      contentType: false,
+      processData: false,
+      success: function(res) {
+        msg.text(res);
+        setTimeout(() => location.reload(), 800);
+      },
+      error: function(xhr) {
+        msg.text('Erro: ' + xhr.responseText);
+      }
+    });
+  });
 });
 </script>
 </body>

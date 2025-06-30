@@ -18,13 +18,14 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
      */
     public function insere($produto) {
         $query = 'INSERT INTO ' . $this->table_name .
-                 ' (nome, preco, quantidade, fornecedor_id) VALUES ' .
-                 '(:nome, :preco, :quantidade, :fornecedor_id)';
+                 ' (nome, preco, quantidade, fornecedor_id, imagem) VALUES ' .
+                 '(:nome, :preco, :quantidade, :fornecedor_id, :imagem)';
         $stmt = $this->conn->prepare($query);
-        $stmt->bindValue(':nome',          $produto->getNome());
+        $stmt->bindValue(':nome',          $produto->getNome(),         PDO::PARAM_STR);
         $stmt->bindValue(':preco',         $produto->getPreco());
-        $stmt->bindValue(':quantidade',    $produto->getQuantidade());
-        $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId());
+        $stmt->bindValue(':quantidade',    $produto->getQuantidade(),   PDO::PARAM_INT);
+        $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId(), PDO::PARAM_INT);
+        $stmt->bindValue(':imagem',        $produto->getImagem(),       PDO::PARAM_LOB);
 
         return $stmt->execute()
             ? $this->conn->lastInsertId()
@@ -42,27 +43,33 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
     }
 
     /**
-     * Altera um produto
+     * Altera um produto existente, incluindo imagem.
      */
     public function altera($produto) {
-        $query = 'UPDATE ' . $this->table_name .
-                 ' SET nome = :nome, preco = :preco, quantidade = :quantidade, ' .
-                 'fornecedor_id = :fornecedor_id WHERE id = :id';
+        $query = 'UPDATE ' . $this->table_name . ' SET
+                      nome          = :nome,
+                      preco         = :preco,
+                      quantidade    = :quantidade,
+                      fornecedor_id = :fornecedor_id,
+                      imagem        = :imagem
+                  WHERE id = :id';
         $stmt = $this->conn->prepare($query);
-        $stmt->bindValue(':nome',          $produto->getNome());
+        $stmt->bindValue(':nome',          $produto->getNome(),         PDO::PARAM_STR);
         $stmt->bindValue(':preco',         $produto->getPreco());
-        $stmt->bindValue(':quantidade',    $produto->getQuantidade());
-        $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId());
-        $stmt->bindValue(':id',            $produto->getId(), PDO::PARAM_INT);
+        $stmt->bindValue(':quantidade',    $produto->getQuantidade(),   PDO::PARAM_INT);
+        $stmt->bindValue(':fornecedor_id', $produto->getFornecedorId(), PDO::PARAM_INT);
+        $stmt->bindValue(':imagem',        $produto->getImagem(),       PDO::PARAM_LOB);
+        $stmt->bindValue(':id',            $produto->getId(),           PDO::PARAM_INT);
+
         return $stmt->execute();
     }
 
-
     /**
-     * Busca um produto pelo ID
+     * Busca um produto pelo ID, retornando também imagem.
      */
     public function buscaPorId($id) {
-        $query = 'SELECT * FROM ' . $this->table_name . ' WHERE id = :id LIMIT 1';
+        $query = 'SELECT id, nome, preco, quantidade, fornecedor_id, imagem
+                    FROM ' . $this->table_name . ' WHERE id = :id LIMIT 1';
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
@@ -76,15 +83,17 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
             (float)$row['preco'],
             (int)$row['quantidade'],
             (int)$row['fornecedor_id'],
-            (int)$row['id']
+            (int)$row['id'],
+            $row['imagem']
         );
     }
 
     /**
-     * Busca produtos com nome semelhante ao filtro
+     * Busca produtos com nome semelhante ao filtro.
      */
     public function buscaPorNome($nome) {
-        $query = 'SELECT * FROM ' . $this->table_name .
+        $query = 'SELECT id, nome, preco, quantidade, fornecedor_id, imagem
+                    FROM ' . $this->table_name .
                  ' WHERE nome ILIKE :nome ORDER BY nome';
         $stmt = $this->conn->prepare($query);
         $stmt->bindValue(':nome', "%{$nome}%", PDO::PARAM_STR);
@@ -97,18 +106,21 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
                 (float)$row['preco'],
                 (int)$row['quantidade'],
                 (int)$row['fornecedor_id'],
-                (int)$row['id']
+                (int)$row['id'],
+                $row['imagem']
             );
         }
         return $result;
     }
 
     /**
-     * Busca todos os produtos
+     * Busca todos os produtos, incluindo imagens.
      */
     public function buscaTodos() {
-        $query = 'SELECT * FROM ' . $this->table_name . ' ORDER BY nome';
-        $stmt = $this->conn->query($query);
+        $query = 'SELECT id, nome, preco, quantidade, fornecedor_id, imagem
+                    FROM ' . $this->table_name . ' ORDER BY nome';
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
 
         $produtos = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -117,14 +129,15 @@ class PostgresProdutoDao extends DAO implements ProdutoDao {
                 (float)$row['preco'],
                 (int)$row['quantidade'],
                 (int)$row['fornecedor_id'],
-                (int)$row['id']
+                (int)$row['id'],
+                $row['imagem']
             );
         }
         return $produtos;
     }
 
     /**
-     * Atualiza a quantidade do produto pelo ID 
+     * Atualiza a quantidade do produto pelo ID.
      */
     public function atualizarQuantidade($id, $quantidade) {
         $query = 'UPDATE ' . $this->table_name . ' SET quantidade = :quantidade WHERE id = :id';

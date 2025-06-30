@@ -11,6 +11,7 @@ if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
 
 require_once __DIR__ . '/../fachada.php';
 
+
 $dao = $factory->getFornecedorDao();
 
 // POST — Antes de qualquer saída HTML
