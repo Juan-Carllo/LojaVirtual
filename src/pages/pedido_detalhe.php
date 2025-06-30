@@ -84,7 +84,7 @@ $total   = array_reduce($itens, fn($s,$it)=>$s+$it->getQuantidade()*$it->getPrec
           case 'ABERTO': ?>
             <button name="acao" value="finalizar"
                     class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-              Finalizar Pedido
+              Realizar Pagamento
             </button>
             <button name="acao" value="cancelar"
                     class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
