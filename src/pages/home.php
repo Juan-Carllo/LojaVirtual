@@ -38,9 +38,19 @@ try {
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         <?php foreach ($produtos as $p): ?>
         <div class="bg-white rounded shadow overflow-hidden flex flex-col">
-            <img src="<?= htmlspecialchars($p->getImagem() ?: '/assets/placeholder.png', ENT_QUOTES, 'UTF-8') ?>"
-                 alt="<?= htmlspecialchars($p->getNome(), ENT_QUOTES, 'UTF-8') ?>"
-                 class="h-48 w-full object-cover" />
+            <?php if ($p->getImagem()): ?>
+                <img
+                    src="data:image/jpeg;base64,<?= base64_encode($p->getImagem()) ?>"
+                    alt="<?= htmlspecialchars($p->getNome(), ENT_QUOTES, 'UTF-8') ?>"
+                    class="h-48 w-full object-cover"
+                />
+            <?php else: ?>
+                <img
+                    src="/assets/placeholder.png"
+                    alt="Sem imagem"
+                    class="h-48 w-full object-cover"
+                />
+            <?php endif; ?>
             <div class="p-4 flex-1 flex flex-col">
                 <h3 class="text-gray-800 font-medium mb-2 flex-1">
                     <?= htmlspecialchars($p->getNome(), ENT_QUOTES, 'UTF-8') ?>
