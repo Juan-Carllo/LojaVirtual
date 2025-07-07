@@ -1,30 +1,26 @@
 <?php
 // pages/fornecedor.php
 
-// 1) tratamento de sessão e permissão
+// 1) sessão e permissão
 if (session_status() === PHP_SESSION_NONE) session_start();
 if (empty($_SESSION['usuario_tipo']) || $_SESSION['usuario_tipo'] !== 'admin') {
     header("Location: /index.php/home");
     exit;
 }
 
-// 2) carrega DAOs
+// 2) DAO
 require_once __DIR__ . '/../fachada.php';
 $dao = $factory->getFornecedorDao();
 
-// 3) POST — inserção, edição ou exclusão
+// 3) POST — inserir/editar/excluir
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // a) exclusão
     if (isset($_POST['delete_id'])) {
-        $rem = $dao->buscaPorId((int)$_POST['delete_id']);
-        if ($rem) {
-            $dao->remove($rem);
-        }
+        $f = $dao->buscaPorId((int)$_POST['delete_id']);
+        if ($f) $dao->remove($f);
         header('Location: /index.php/fornecedor');
         exit;
     }
 
-    // b) inserção / atualização
     $id   = $_POST['id']   ?? null;
     $nome = trim($_POST['nome'] ?? '');
     $cnpj = trim($_POST['cnpj'] ?? '');
@@ -34,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($cnpj === '') $error_cnpj = 'CNPJ é obrigatório.';
 
     if ($error_nome || $error_cnpj) {
-        // reabertura de modal com erro
         $qs = http_build_query([
             'error_nome' => $error_nome,
             'error_cnpj' => $error_cnpj,
@@ -49,41 +44,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($id) {
-        $forn = $dao->buscaPorId((int)$id);
-        if ($forn) {
-            $forn->setNome($nome);
-            $forn->setCnpj($cnpj);
-            $dao->altera($forn);
+        $f = $dao->buscaPorId((int)$id);
+        if ($f) {
+            $f->setNome($nome);
+            $f->setCnpj($cnpj);
+            $dao->altera($f);
         }
     } else {
-        $forn = new Fornecedor(null, $nome, $cnpj);
-        $dao->insere($forn);
+        $f = new Fornecedor(null, $nome, $cnpj);
+        $dao->insere($f);
     }
-
     header('Location: /index.php/fornecedor');
     exit;
 }
 
-// 4) GET — listagem + paginação
+// 4) GET — busca + paginação
 $q       = trim($_GET['q']    ?? '');
 $page    = max(1, intval($_GET['page'] ?? 1));
 $perPage = 10;
 $offset  = ($page - 1) * $perPage;
 
 if ($q !== '') {
-    // busca por nome (sem paginação no DAO)
-    $all           = $dao->buscaPorNome($q);
-    $total         = count($all);
-    $fornecedores  = array_slice($all, $offset, $perPage);
+    // se só dígitos, busca por ID também
+    $candidatos = [];
+    if (ctype_digit($q)) {
+        $byId = $dao->buscaPorId((int)$q);
+        if ($byId) {
+            $candidatos[$byId->getId()] = $byId;
+        }
+    }
+    // busca por nome/CNPJ
+    foreach ($dao->buscaPorNome($q) as $f) {
+        $candidatos[$f->getId()] = $f;
+    }
+    $all          = array_values($candidatos);
+    $total        = count($all);
+    $fornecedores = array_slice($all, $offset, $perPage);
 } else {
-    // busca pagina
+    // pagina normal
     $fornecedores = $dao->buscaPagina($perPage, $offset);
     $total        = $dao->contaTodos();
 }
 
 $totalPages = (int)ceil($total / $perPage);
 
-// 5) dados para reabrir modal em caso de erro
+// 5) para reabrir modal em erro
 $error_nome = $_GET['error_nome'] ?? '';
 $error_cnpj = $_GET['error_cnpj'] ?? '';
 $modalData  = [
@@ -102,11 +107,9 @@ $modalData  = [
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
-  <!-- >> só aqui incluímos o header dentro do body -->
   <?php require_once __DIR__ . '/header.php'; ?>
 
   <main class="flex-1 p-6">
-
     <h1 class="text-2xl font-bold mb-4">Fornecedores</h1>
 
     <!-- busca + novo -->
@@ -114,7 +117,7 @@ $modalData  = [
       <form method="GET" action="/index.php/fornecedor" class="flex-1 flex">
         <input
           name="q" type="text"
-          placeholder="Pesquisar fornecedores…"
+          placeholder="Pesquisar por nome, CNPJ ou código…"
           value="<?= htmlspecialchars($q, ENT_QUOTES) ?>"
           class="flex-1 border px-4 py-2 rounded-l focus:ring-2 focus:ring-red-500"
         />
@@ -133,6 +136,7 @@ $modalData  = [
     <table class="min-w-full bg-white rounded shadow overflow-hidden">
       <thead>
         <tr class="bg-gray-200 text-left">
+          <th class="px-4 py-2">Código</th>
           <th class="px-4 py-2">Nome</th>
           <th class="px-4 py-2">CNPJ</th>
           <th class="px-4 py-2">Ações</th>
@@ -140,7 +144,8 @@ $modalData  = [
       </thead>
       <tbody>
         <?php foreach ($fornecedores as $f): ?>
-        <tr class="border-t">
+        <tr class="border-t hover:bg-gray-50">
+          <td class="px-4 py-2"><?= $f->getId() ?></td>
           <td class="px-4 py-2"><?= htmlspecialchars($f->getNome(), ENT_QUOTES) ?></td>
           <td class="px-4 py-2"><?= htmlspecialchars($f->getCnpj(), ENT_QUOTES) ?></td>
           <td class="px-4 py-2 space-x-2">
@@ -173,21 +178,21 @@ $modalData  = [
     <div class="mt-4 flex justify-center space-x-2">
       <?php if ($page > 1): ?>
       <a
-        href="?q=<?= urlencode($q) ?>&page=<?= $page - 1 ?>"
+        href="?q=<?= urlencode($q) ?>&page=<?= $page-1 ?>"
         class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
       >‹ Anterior</a>
       <?php endif; ?>
 
-      <?php for ($p = 1; $p <= $totalPages; $p++): ?>
+      <?php for ($p=1; $p<=$totalPages; $p++): ?>
       <a
         href="?q=<?= urlencode($q) ?>&page=<?= $p ?>"
-        class="px-3 py-1 rounded <?= $p === $page ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200' ?>"
+        class="px-3 py-1 rounded <?= $p===$page ? 'bg-red-600 text-white' : 'bg-gray-100 hover:bg-gray-200' ?>"
       ><?= $p ?></a>
       <?php endfor; ?>
 
       <?php if ($page < $totalPages): ?>
       <a
-        href="?q=<?= urlencode($q) ?>&page=<?= $page + 1 ?>"
+        href="?q=<?= urlencode($q) ?>&page=<?= $page+1 ?>"
         class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
       >Próxima ›</a>
       <?php endif; ?>
@@ -208,7 +213,8 @@ $modalData  = [
           action="/index.php/fornecedor"
           class="space-y-4"
         >
-          <input type="hidden" name="id" id="fornId" value="<?= htmlspecialchars($modalData['id'], ENT_QUOTES) ?>">
+          <input type="hidden" name="id" id="fornId"
+                 value="<?= htmlspecialchars($modalData['id'], ENT_QUOTES) ?>">
 
           <div>
             <label class="block text-sm">Nome</label>
@@ -235,10 +241,12 @@ $modalData  = [
           </div>
 
           <div class="flex justify-end space-x-2">
-            <button type="button" id="cancelBtn" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+            <button type="button" id="cancelBtn"
+                    class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
               Cancelar
             </button>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+            <button type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
               Salvar
             </button>
           </div>
@@ -280,18 +288,17 @@ $modalData  = [
       overlay.addEventListener('click', closeModal);
 
       editBtns.forEach(btn =>
-        btn.addEventListener('click', () =>
-          openModal(true, {
-            id:   btn.dataset.id,
-            nome: btn.dataset.nome,
-            cnpj: btn.dataset.cnpj
-          })
-        )
+        btn.addEventListener('click', () => openModal(true, {
+          id:   btn.dataset.id,
+          nome: btn.dataset.nome,
+          cnpj: btn.dataset.cnpj
+        }))
       );
 
-      // reabre modal em caso de erro de validação
       <?php if ($error_nome || $error_cnpj): ?>
-      openModal(<?= $modalData['id'] ? 'true' : 'false' ?>, <?= json_encode($modalData) ?>);
+      // reabre modal se houve erro
+      openModal(<?= $modalData['id'] ? 'true' : 'false' ?>,
+                <?= json_encode($modalData) ?>);
       <?php endif; ?>
     });
   </script>

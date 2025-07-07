@@ -138,17 +138,13 @@ INSERT INTO usuario (login, senha, nome, tipo, endereco_id) VALUES
 -- Inserção de 15 produtos (mistura de itens engraçados e anabolizantes famosos)
 INSERT INTO produto (nome, preco, quantidade, fornecedor_id) VALUES
   ('Monster Energy',              12.00, 100, 5),  -- Probiótica
-  ('Suco de Monstro',             10.00, 100, 5),  -- Probiótica
   ('Água com Músculo',             5.00, 100, 5),  -- Probiótica
-  ('Dianabol (Metandrostenolona)',150.00,  50, 2),  -- Universal Nutrition
   ('Oxandrolona 10mg',            180.00,  50, 2),  -- Universal Nutrition
   ('Anadrol (Oximetolona)',       220.00,  50, 3),  -- Growth Supplements
   ('Deca Durabolin (Nandrolona)', 130.00,  50, 3),  -- Growth Supplements
-  ('Winstrol (Stanozolol)',       160.00,  50, 4),  -- Integralmédica
   ('Primobolan (Metenolona)',     270.00,  50, 4),  -- Integralmédica
   ('Clenbuterol 40 mcg',          110.00,  50, 6),  -- Max Titanium
   ('Masteron (Drostanolona)',     230.00,  50, 6),  -- Max Titanium
   ('Halotestin (Fluoximesterona)',250.00,  50, 7),  -- Atlhetica Nutrition
   ('Proviron (Mesterolona)',      100.00,  50, 7),  -- Atlhetica Nutrition
-  ('Termogênico Turbo',            90.00,  75, 8),  -- New Millen
-  ('Suco de Proteína',             15.00, 100, 8);  -- New Millen
+  ('Termogênico Turbo',            90.00,  75, 8);  -- New Millen

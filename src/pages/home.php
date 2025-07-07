@@ -1,14 +1,34 @@
 <?php
 // pages/home.php
 if (session_status() === PHP_SESSION_NONE) session_start();
+
 require_once __DIR__ . '/../fachada.php';
 $produtoDao = $factory->getProdutoDao();
 
 $q = trim($_GET['q'] ?? '');
+
 try {
-    $produtos = $q
-      ? $produtoDao->buscaPorNome($q)
-      : $produtoDao->buscaTodos();
+    if ($q !== '') {
+        if (ctype_digit($q)) {
+            // busca combinada por ID e nome
+            $byId   = $produtoDao->buscaPorId((int)$q);
+            $byName = $produtoDao->buscaPorNome($q);
+            $tmp    = [];
+            if ($byId) {
+                $tmp[$byId->getId()] = $byId;
+            }
+            foreach ($byName as $p) {
+                $tmp[$p->getId()] = $p;
+            }
+            $produtos = array_values($tmp);
+        } else {
+            // apenas por nome
+            $produtos = $produtoDao->buscaPorNome($q);
+        }
+    } else {
+        // sem filtro, traz todos
+        $produtos = $produtoDao->buscaTodos();
+    }
 } catch (Exception $e) {
     echo "<p class='text-red-600'>Erro: {$e->getMessage()}</p>";
     $produtos = [];
@@ -27,52 +47,49 @@ try {
 
   <?php require_once __DIR__ . '/header.php'; ?>
 
-  <!-- carrinho: overlay & sidebar -->
-  <div id="cartOverlay" class="fixed inset-0 bg-black opacity-50 hidden z-40"></div>
-  <div id="cartSidebar"
-       class="fixed top-0 right-0 h-full w-80 bg-white shadow-lg transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
-    <div class="p-4 flex justify-between items-center border-b">
-      <h2 class="text-xl font-semibold">Meu Carrinho</h2>
-      <button id="closeCart" class="text-gray-600 hover:text-gray-800">✕</button>
-    </div>
-    <div id="cartItems" class="p-4 overflow-y-auto flex-1"></div>
-    <div class="p-4 border-t">
-      <div class="flex justify-between mb-4">
-        <span class="font-bold">Total</span>
-        <span id="cartTotal">R$ 0,00</span>
-      </div>
-      <button id="checkout"
-              class="w-full bg-red-600 text-white py-2 rounded hover:bg-red-700">
-        Finalizar Pedido
-      </button>
-    </div>
-  </div>
-
   <main class="flex-1 p-6 pt-8">
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       <?php foreach ($produtos as $p): ?>
+        <?php
+          // determina src da imagem // PNG/JPG/WebP
+          $src = '/assets/placeholder.png';
+          foreach (['jpg','jpeg','png','webp'] as $ext) {
+              $rel = "/assets/images/{$p->getId()}.{$ext}";
+              if (file_exists($_SERVER['DOCUMENT_ROOT'] . $rel)) {
+                  $src = $rel;
+                  break;
+              }
+          }
+          // senão, se houver blob, converte
+          if ($src === '/assets/placeholder.png' && $p->getImagem()) {
+              $finfo  = finfo_open(FILEINFO_MIME_TYPE);
+              $mime   = finfo_buffer($finfo, $p->getImagem());
+              finfo_close($finfo);
+              $base64 = base64_encode($p->getImagem());
+              $src    = "data:{$mime};base64,{$base64}";
+          }
+        ?>
         <div class="bg-white rounded shadow overflow-hidden flex flex-col">
-          <?php if ($p->getImagem()): ?>
-            <img src="data:image/jpeg;base64,<?= base64_encode($p->getImagem()) ?>"
-                 alt="<?= htmlspecialchars($p->getNome(), ENT_QUOTES) ?>"
-                 class="h-48 w-full object-cover"/>
-          <?php else: ?>
-            <img src="/assets/placeholder.png" alt="Sem imagem"
-                 class="h-48 w-full object-cover"/>
-          <?php endif; ?>
+          <div class="h-48 bg-gray-100 flex items-center justify-center p-2">
+            <img
+              src="<?= htmlspecialchars($src, ENT_QUOTES) ?>"
+              alt="<?= htmlspecialchars($p->getNome(), ENT_QUOTES) ?>"
+              class="max-h-full max-w-full object-contain"
+            />
+          </div>
           <div class="p-4 flex-1 flex flex-col">
             <h3 class="text-gray-800 font-medium mb-2 flex-1">
               <?= htmlspecialchars($p->getNome(), ENT_QUOTES) ?>
             </h3>
             <p class="text-red-600 font-bold mb-2">
-              R$ <?= number_format($p->getPreco(),2,',','.') ?>
+              R$ <?= number_format($p->getPreco(), 2, ',', '.') ?>
             </p>
             <p class="mb-4">Estoque: <strong><?= $p->getQuantidade() ?></strong></p>
             <?php if ($p->getQuantidade() > 0): ?>
-              <button class="addBtn mt-auto bg-red-600 hover:bg-red-700 text-white py-2 rounded"
-                      data-id="<?= $p->getId() ?>">
-                Adicionar
-              </button>
+              <button
+                class="addBtn mt-auto bg-red-600 hover:bg-red-700 text-white py-2 rounded"
+                data-id="<?= $p->getId() ?>"
+              >Adicionar</button>
             <?php else: ?>
               <span class="mt-auto text-gray-500">Indisponível</span>
             <?php endif; ?>
@@ -82,21 +99,15 @@ try {
     </div>
   </main>
 
- <script>
+<script>
 $(function(){
-  var $sb = $('#cartSidebar'),
-      $ov = $('#cartOverlay'),
-      $tg = $('#toggleCart'),
-      $cl = $('#closeCart');
+  const $sb = $('#cartSidebar'),
+        $ov = $('#cartOverlay'),
+        $tg = $('#toggleCart'),
+        $cl = $('#closeCart');
 
-  function openCart(){
-    $sb.removeClass('translate-x-full');
-    $ov.removeClass('hidden');
-  }
-  function closeCart(){
-    $sb.addClass('translate-x-full');
-    $ov.addClass('hidden');
-  }
+  function openCart(){ $sb.removeClass('translate-x-full'); $ov.removeClass('hidden'); }
+  function closeCart(){ $sb.addClass('translate-x-full'); $ov.addClass('hidden'); }
 
   closeCart();
   $tg.on('click', openCart);
@@ -104,84 +115,66 @@ $(function(){
   $ov.on('click', closeCart);
 
   function loadCart(){
-    $.getJSON('/ajax/getCarrinho.php', function(res){
-      $('#cartCount').text(res.count||0);
-      $('#cartTotal').text('R$ '+(res.total||0).toFixed(2).replace('.',','));
-      var $ct = $('#cartItems').empty();
+    $.getJSON('/ajax/getCarrinho.php', res => {
+      $('#cartCount').text(res.count || 0);
+      $('#cartTotal').text('R$ ' + (res.total||0).toFixed(2).replace('.',','));
+      const $ct = $('#cartItems').empty();
       if (!res.items?.length) {
         return $ct.append('<p class="text-gray-600">Carrinho vazio.</p>');
       }
-      res.items.forEach(function(it){
-        $ct.append(
-          `<div class="mb-4 border-b pb-2">
-             <div class="flex justify-between">
-               <span>${it.nome}</span>
-               <button class="removeItem text-red-600" data-id="${it.id}">✕</button>
-             </div>
-             <div class="mt-2 flex items-center space-x-2">
-               <input type="number" min="1" max="${it.max}"
-                      class="cartQty border px-2 py-1 w-16"
-                      data-id="${it.id}" value="${it.qty}">
-               <span>R$ ${it.line.toFixed(2).replace('.',',')}</span>
-             </div>
-           </div>`
-        );
+      res.items.forEach(it => {
+        $ct.append(`
+          <div class="mb-4 border-b pb-2">
+            <div class="flex justify-between">
+              <span>${it.nome}</span>
+              <button class="removeItem text-red-600" data-id="${it.id}">✕</button>
+            </div>
+            <div class="mt-2 flex items-center space-x-2">
+              <input type="number" min="1" max="${it.max}"
+                     class="cartQty border px-2 py-1 w-16"
+                     data-id="${it.id}" value="${it.qty}">
+              <span>R$ ${it.line.toFixed(2).replace('.',',')}</span>
+            </div>
+          </div>
+        `);
       });
     });
   }
 
-  // Adicionar — agora incrementando em 1 se já estiver no carrinho
+  // adicionar / incrementar
   $(document).on('click','.addBtn', function(){
-    var id = $(this).data('id');
-    // tenta achar o input de qty para este id
-    var $input = $(`.cartQty[data-id='${id}']`);
-    var atual = $input.length ? parseInt($input.val(),10) : 0;
-    var novaQty = atual + 1;
-    $.post('/ajax/adicionaCarrinho.php',
-      { id: id, qty: novaQty },
-      function(res){
-        if (!res.success) alert(res.message || 'Erro ao adicionar');
-        loadCart();
-        openCart();
-      },
-      'json'
-    );
+    const id = $(this).data('id'),
+          $in = $(`.cartQty[data-id='${id}']`),
+          cur = $in.length ? parseInt($in.val(),10) : 0,
+          nxt = cur + 1;
+    $.post('/ajax/adicionaCarrinho.php',{ id, qty: nxt }, res => {
+      if (!res.success) alert(res.message||'Erro');
+      loadCart(); openCart();
+    }, 'json');
   });
 
-  // Atualizar quantidade manual
+  // alterar qty
   $(document).on('change','.cartQty', function(){
-    var id = $(this).data('id'),
-        qty = parseInt(this.value,10) || 1;
-    $.post('/ajax/adicionaCarrinho.php',
-      { id: id, qty: qty },
-      function(res){
-        if (!res.success) alert(res.message || 'Erro ao atualizar');
-        loadCart();
-      },
-      'json'
-    );
+    const id = $(this).data('id'),
+          qty = parseInt(this.value,10) || 1;
+    $.post('/ajax/adicionaCarrinho.php',{ id, qty }, res => {
+      if (!res.success) alert(res.message||'Erro');
+      loadCart();
+    }, 'json');
   });
 
-  // Remover item
+  // remover item
   $(document).on('click','.removeItem', function(){
-    $.post('/ajax/removeDoCarrinho.php',
-      { id: $(this).data('id') },
-      function(){ loadCart() },
-      'json'
-    );
+    $.post('/ajax/removeDoCarrinho.php',{ id: $(this).data('id') }, loadCart, 'json');
   });
 
-  // Finalizar pedido
-  $('#checkout').on('click', function(){
-    location.href = '/index.php/finalizarPedido';
-  });
+  // finalizar pedido
+  $('#checkout').on('click', ()=> location.href = '/index.php/finalizarPedido');
 
-  // Carga inicial
+  // carga inicial
   loadCart();
 });
 </script>
-
-
 
 </body>
 </html>
