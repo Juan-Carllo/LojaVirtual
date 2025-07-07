@@ -3,6 +3,25 @@
 // captura apenas o path
 $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+// RESTAPI
+if (preg_match('#^/api/pedidos$#', $request)) {
+    $page = max(1, (int)($_GET['page'] ?? 1));
+    $clienteNome = $_GET['cliente_nome'] ?? null;
+    require_once __DIR__ . '/api/pedidos.php';
+    handlePedidosApi($page, 10, $clienteNome);
+    exit;
+}
+if (preg_match('#^/api/pedido/(\d+)$#', $request, $matches)) {
+    $pedidoId = (int)$matches[1];
+
+    // return JSON response
+    require_once __DIR__ . '/api/pedido_detalhe.php'; // this file should handle outputting JSON and exiting
+    handlePedidoDetalheApi($pedidoId); // custom function inside pedido_detalhe.php
+    exit;
+}
+// RESTAPI
+
+
 // assets
 if (preg_match('#^(/index\.php)?/assets/#', $request)) {
     $staticPath = preg_replace('#^/index\.php#', '', $request);
@@ -105,8 +124,6 @@ switch ($request) {
         include __DIR__ . '/logout.php';
         break;
     
-  
-
     // 404
     default:
         http_response_code(404);

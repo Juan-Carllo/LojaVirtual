@@ -19,3 +19,5 @@ COPY ./src /var/www/html
 
 # Define o arquivo index padrão
 RUN echo 'DirectoryIndex index.php' >> /etc/apache2/apache2.conf
+
+RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
